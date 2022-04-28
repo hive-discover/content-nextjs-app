@@ -1,9 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import KUTE from "kute.js";
 
 import Divider from "@mui/material/Divider";
 
 export default function DefaultLoader(props) {
+
+  // Start the loading animation after some time to prevent the loading animation from flashing
+  const [startAnimation, setStartAnimation] = useState(false);
+  useEffect(() => {
+    setTimeout(()=>{setStartAnimation(true)}, 750);
+  }, [props]);
+
   useEffect(() => {
     const tween = KUTE.fromTo(
       "#blob1",
@@ -11,14 +18,16 @@ export default function DefaultLoader(props) {
       { path: "#blob2" },
       { duration: 2000, repeat: 999, yoyo: true }
     );
-    tween.start();
-  });
+
+    if(startAnimation)
+      tween.start();
+  }, [startAnimation]);
 
   return (
     <div
       style={{
         height: "100vh",
-        display: "flex",
+        display: startAnimation ? "flex" : "none",
         justifyContent: "center",
         alignItems: "center",
       }}

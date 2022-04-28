@@ -160,15 +160,13 @@ export default function SearchBar({type, search_query}){
                             onKeyPress={(event) => {if(event.key === "Enter"){onClickGo();}}}                       
                         />
                     </Search>                    
-                </Grid>
 
-                <Grid item xs={12} sx={{pl : {sm : 2, md : 3}, pr : {sm : 2, md : 3}, width : "100%"}}>
                     {getSearchOptions(type, queryValue)}
                 </Grid>
 
                 <Grid item xs={12} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>
                     {
-                        type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3, mr : 5, width : "40vh"}}>Return</Button></Link>) : null
+                        type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
                     }
                     <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={onClickGo}>Go!</Button>
                 </Grid>

@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import useSWR from 'swr';
+import {useState, useEffect} from 'react';
 import {useSession} from 'next-auth/react';
+import Image from 'next/image';
 import moment from 'moment';
 import parse from 'html-react-parser';
 
@@ -25,7 +27,7 @@ const getThumbnailImage = (metadata) => {
 
     if(Array.isArray(metadata.image)){
         if(metadata.image.length > 0)
-            return "/api/imageProxy?imageUrl=" + metadata.image[0];
+            return metadata.image[0];
     }
     
     if(typeof metadata.image === 'string')
@@ -67,22 +69,21 @@ const CustomWidthTooltip = styled(({ className, ...props }) => (
     },
   });
 
-const AuthorToolTip = (account) => { 
-    if(!account)
+const AuthorToolTip = (author) => { 
+    if(!author)
         return <Skeleton variant="circle" width={15} height={15} />
 
-    const src = account && account.posting_json_metadata && account.posting_json_metadata.profile ? ("/api/imageProxy?imageUrl=" + account.posting_json_metadata.profile.profile_image) : null;
+    const src = `/api/imageProxy?imageUrl=https://images.hive.blog/u/${author}/avatar/small`;
     return (
-        <CustomWidthTooltip title={<ProfileRowCard username={account.name} clickable={true}/>}>
+        <CustomWidthTooltip title={<ProfileRowCard username={author} clickable={true}/>}>
             <p style={{display : "flex", alignItems : "center"}}><Avatar src={src} alt="" width={15} height={15} />
-            &nbsp;&nbsp;&nbsp; @{account.name} &nbsp;&nbsp;&nbsp;</p>
+            &nbsp;&nbsp;&nbsp; @{author} &nbsp;&nbsp;&nbsp;</p>
         </CustomWidthTooltip>
     )
 }
 
 export default function RowPostcard({ post, author, permlink, highlight}){    
     // Data Hooks
-    const {data : account, error : accountError} = useSWR(`/api/getAccount/${author || post.author}`, (url)=> fetch(url).then(res => res.json()));
     const { data: session } = useSession()
 
     // (maybe Post Hook) Check if we have all data, else get HIVE Post from API
@@ -102,9 +103,9 @@ export default function RowPostcard({ post, author, permlink, highlight}){
 
             {/* Thumbnail Image */}
             {thumbnail 
-                ? (<Grid item xs={12} sm={2} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>                
-                        <Box sx={{pt : 2}}>
-                            <img src={thumbnail} alt="" style={{maxWidth : "100%", maxHeight : "100%"}}/>
+                ? (<Grid item xs={12} sm={2} sx={{minHeight: '250px', maxHeight : '500px'}}>                
+                        <Box sx={{pt : 2, width: '100%', height: '100%', position: 'relative'}}>
+                            <Image src={thumbnail} alt="" layout='fill' width="100%" objectFit='contain'/>
                         </Box>
                     </Grid>
                 ) : null}
@@ -146,7 +147,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
 
                     {/* Author, Votes, Replies and Date */}
                     <Typography variant="caption" sx={{display : "flex", alignItems : "center"}}>
-                        {AuthorToolTip(account)}
+                        {AuthorToolTip(post.author)}
                         
                         <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
                         <Favorite color={checkIfVotes(post, session) ? "primary" : "inherit"}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}

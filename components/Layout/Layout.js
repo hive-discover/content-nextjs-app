@@ -376,7 +376,7 @@ export default function Layout({children, ...props}) {
                       onClick={(event) => { setProfileMenuOpen(event.currentTarget) }}
                     >
                       <Avatar 
-                        src={"/api/imageProxy?imageUrl=" + (account && !account.error ? account.posting_json_metadata.profile.profile_image : "")} 
+                        src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${session.user.name}/avatar/small`} 
                         variant="rounded" 
                       />
                     </Button>

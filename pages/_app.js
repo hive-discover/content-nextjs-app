@@ -28,11 +28,11 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
   const router = useRouter();
   const [loading, setLoading] = useState(null);
 
-  // useEffect(()=>{
-  //   router.events.on("routeChangeStart", (url) => {setLoading(url)});
-  //   router.events.on("routeChangeComplete", (url) => {setLoading(null)});
-  //   router.events.on("routeChangeError", (url) => {setLoading(null)});
-  // }, [router]);
+  useEffect(()=>{
+    router.events.on("routeChangeStart", (url) => {setLoading(url)});
+    router.events.on("routeChangeComplete", (url) => {setLoading(null)});
+    router.events.on("routeChangeError", (url) => {setLoading(null)});
+  }, [router]);
 
   return (
     <Fragment>
