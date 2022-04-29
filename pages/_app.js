@@ -46,10 +46,9 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
           <SessionProvider session={session}>
             <Provider store={store}>
               <Layout>
-                {loading
-                  ? <DefaultLoader />
-                  : <Component {...pageProps} />
-                }
+                {/* Show loading State  */}
+                {loading ? <DefaultLoader /> : null }
+                <Component {...pageProps} />
               </Layout>
             </Provider>
           </SessionProvider>

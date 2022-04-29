@@ -14,6 +14,8 @@ export default async function handler(req, res) {
         "observer":observer ? observer.replace("@", "") : null
     };
 
+    res.setHeader('Cache-control', 's-maxage=5, stale-while-revalidate=300');
+
     await hive.api.callAsync('bridge.get_account_posts', rpc_data)
         .then(result => new Promise((resolve, reject) => {if(result) resolve(result); else reject("Network error");}))
         .then(result => new Promise((resolve, reject) => {if(Array.isArray(result)) resolve(result); else reject("Account not found");}))

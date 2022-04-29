@@ -3,6 +3,8 @@ import hive from "@hiveio/hive-js"
 export default async function handler(req, res) {
     let {author} = req.query;
     author = author.replace("@", "");
+
+    res.setHeader('Cache-control', 's-maxage=3, stale-while-revalidate=180');
     
     await new Promise(() => {
         hive.api.getFollowCount(author, function(err, result) {

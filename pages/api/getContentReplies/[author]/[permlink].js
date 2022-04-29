@@ -5,6 +5,8 @@ import parseMarkdown from "../../../../lib/parseMarkdown"
 export default async function handler(req, res) {
     const { author, permlink } = req.query
 
+    res.setHeader('Cache-control', 's-maxage=5, stale-while-revalidate=300');
+
     await new Promise((resolve, reject) => {
         hive.api.getContentReplies(author.replace("@", ""), permlink, async (err, result) => {
             if (!result || err || !Array.isArray(result)) 

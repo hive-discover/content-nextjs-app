@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import KUTE from "kute.js";
 
-import Divider from "@mui/material/Divider";
+import { Backdrop } from '@mui/material'
 
 export default function DefaultLoader(props) {
-
+  
   // Start the loading animation after some time to prevent the loading animation from flashing
   const [startAnimation, setStartAnimation] = useState(false);
   useEffect(() => {
@@ -24,10 +24,12 @@ export default function DefaultLoader(props) {
   }, [startAnimation]);
 
   return (
-    <div
-      style={{
+    <Backdrop 
+      open={startAnimation} 
+      sx={{
+        color: '#fff', 
+        zIndex: (theme) => theme.zIndex.drawer + 1,
         height: "100vh",
-        display: startAnimation ? "flex" : "none",
         justifyContent: "center",
         alignItems: "center",
       }}
@@ -56,6 +58,6 @@ export default function DefaultLoader(props) {
         <h4>Loading...</h4>
 
       
-    </div>
+    </Backdrop>
   );
 }
