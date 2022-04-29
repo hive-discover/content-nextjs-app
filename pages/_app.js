@@ -1,8 +1,6 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/router'
 
-import PlausibleProvider from 'next-plausible'
-
 import Head from 'next/head'
 import { SessionProvider } from "next-auth/react"
 
@@ -30,11 +28,11 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
   const router = useRouter();
   const [loading, setLoading] = useState(null);
 
-  // useEffect(()=>{
-  //   router.events.on("routeChangeStart", (url) => {setLoading(url)});
-  //   router.events.on("routeChangeComplete", (url) => {setLoading(null)});
-  //   router.events.on("routeChangeError", (url) => {setLoading(null)});
-  // }, [router]);
+  useEffect(()=>{
+    router.events.on("routeChangeStart", (url) => {setLoading(url)});
+    router.events.on("routeChangeComplete", (url) => {setLoading(null)});
+    router.events.on("routeChangeError", (url) => {setLoading(null)});
+  }, [router]);
 
   return (
     <Fragment>
@@ -45,18 +43,15 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
     
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <PlausibleProvider domain={process.env.PLAUSIBLE_DOMAIN} enabled={true} selfHosted={true} customDomain="https://stats.hive-discover.tech">
           <SessionProvider session={session}>
             <Provider store={store}>
               <Layout>
-                {loading
-                  ? <DefaultLoader />
-                  : <Component {...pageProps} />
-                }
+                {/* Show loading State  */}
+                {loading ? <DefaultLoader /> : null }
+                <Component {...pageProps} />
               </Layout>
             </Provider>
           </SessionProvider>
-        </PlausibleProvider>
       </ThemeProvider>
     </Fragment>
   )

@@ -3,6 +3,8 @@ import hive from "@hiveio/hive-js"
 export default async function handler(req, res) {
     const { username } = req.query
 
+    res.setHeader('Cache-control', 's-maxage=10, stale-while-revalidate=300');
+
     // Get Account-Data from Hive-API
     await new Promise((resolve, reject) => {
         hive.api.getAccounts([username.replace("@", "")], function(err, result) {
