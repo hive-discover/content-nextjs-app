@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/router'
+import dynamic from 'next/dynamic'
 
 import Head from 'next/head'
 import { SessionProvider } from "next-auth/react"
@@ -10,8 +11,7 @@ import { Provider } from 'react-redux'
 
 import {store} from '../redux/store'
 import Layout from '../components/Layout/Layout'
-import DefaultLoader from '../components/Loading/DefaultLoader'
-
+const DefaultLoader = dynamic(() => import('../components/Loading/DefaultLoader'));
 
 // Fonts
 //  * Roboto
@@ -38,6 +38,7 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
     <Fragment>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
+        <link rel="icon" type="image/png" href="/img/Logo/iconOnly60.png" />
         <title>HiveDiscover - Discover more on HIVE</title>
       </Head>
     

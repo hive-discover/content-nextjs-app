@@ -1,35 +1,33 @@
+
 import useSWR from 'swr';
 import Link from 'next/link';
 
-import {Avatar, Button, Box, Divider, Card, CardContent, Typography, Skeleton} from '@mui/material'
+import {Avatar, Button, Box, Divider, Paper, CardContent, Typography, Skeleton} from '@mui/material'
 
-export default function ProfileRowCard({username, clickable, ...rest}){
+export default function ProfileColumnCard({username, clickable, ...rest}){
     username = (username || "unknown").replace("@", "");
-    
+
     const {data : follow_data, error : follow_error} = useSWR(`/api/getFollowCount/${username}`, (url) => fetch(url).then(res => res.json()));       
     const {data : account, error : profile_error} = useSWR(`/api/getAccount/${username}`, (url) => fetch(url).then(res => res.json()));
     
     const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};
 
     return (
-        <Card sx={{ display: 'flex'}}>
-            <Box sx={{ display: 'flex', flexDirection: 'column'}}>
-                <CardContent>
-                    <Avatar
-                        src={`https://images.hive.blog/u/${username}/avatar/medium `}
-                        sx={{
-                            width: '100px',
-                            height: '100px',
-                        }}
-                    />                   
-                </CardContent>
-            </Box> 
+        <Paper elevation={2} sx={{p : 2}}>
+            <Avatar
+                src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${username}/avatar/medium `}
+                sx={{
+                    width: '128px',
+                    height: '128px',
+                    margin : "auto"
+                }}
+            />                   
             <Box sx={{ display: 'flex', flexDirection: 'column', width : "100%" }}>
                 <CardContent>
                     <Typography variant="h5" component="h2">
                         {profile ? profile.name : <Skeleton variant="text"/>}
                     </Typography>
-                    <Typography variant="body2" component="span">
+                    <Typography variant="body2" component="span" sx={{textAlign:"center"}}>
                         {profile ? profile.about : <Skeleton variant="text" height={60} />}
                     </Typography>
                     
@@ -52,6 +50,6 @@ export default function ProfileRowCard({username, clickable, ...rest}){
                     </Link>
             ) : null}                                        
             </Box>                        
-        </Card>
+        </Paper>
     );
 }

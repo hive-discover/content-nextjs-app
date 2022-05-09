@@ -1,8 +1,10 @@
+import dynamic from 'next/dynamic'
 
 import { Box, Container, Divider } from "@mui/material";
 
 import SearchBar from "../../components/Search/SearchBar";
-import PostResults from "../../components/Search/PostResults";
+
+const PostResults = dynamic(() => import("../../components/Search/PostResults"));
 
 const types = ["posts", "accounts", "stockimages"]
 

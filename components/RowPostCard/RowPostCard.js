@@ -1,26 +1,17 @@
 import Link from 'next/link';
 import useSWR from 'swr';
 import {useState, useEffect} from 'react';
-import {useSession} from 'next-auth/react';
 import Image from 'next/image';
-import moment from 'moment';
+import getDate from '../../lib/niceTimestamp';
 import parse from 'html-react-parser';
 
-import { styled } from '@mui/material/styles';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {Avatar, Badge, Chip, Box, Divider, Grid, CardContent, CardActionArea, Typography, Skeleton} from '@mui/material'
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
-
-import Forum from '@mui/icons-material/Forum';
-import Favorite from '@mui/icons-material/Favorite'
-import PresentToAll from '@mui/icons-material/PresentToAll'
-import AttachMoney from '@mui/icons-material/AttachMoney'
-import PriceCheck from '@mui/icons-material/PriceCheck'
+import {Chip, Box, Grid, CardContent, CardActionArea, Typography} from '@mui/material'
 
 import RowPostCardLoading from './RowPostCardLoading';
 import CategoryChip from '../../components/CategoryChip/CategoryChip';
-import ProfileRowCard from '../ProfileRowCard/ProfileRowCard';
+import PostStats from '../../components/PostStats/PostStats';
 
 
 const getThumbnailImage = (metadata, thumbnailErrors) => {
@@ -55,71 +46,8 @@ const getThumbnailImage = (metadata, thumbnailErrors) => {
     return null;
 }
 
-const getPayOut = (post) => {
-    if(post.is_paidout){
-        const [author_payout_value, currency] = post.author_payout_value.split(" ")
-        const curator_payout_value = post.curator_payout_value.split(" ")[0]
-
-        const total = (parseFloat(author_payout_value) + parseFloat(curator_payout_value)).toFixed(3);
-
-        return [<PriceCheck />, `${total} ${currency}`];      
-    } else {
-        const pending_payout_value = post.pending_payout_value;
-
-        return [<AttachMoney />, pending_payout_value]; 
-    }
-}
-
-const checkIfVotes = (post, session) => {
-    if(!post || !session || !post.active_votes)
-        return false;
-
-    const possibleIndex = post.active_votes.findIndex(vote => vote.voter === session.user.name);
-    return possibleIndex > -1;
-}
-
-const CustomWidthTooltip = styled(({ className, ...props }) => (
-    <Tooltip {...props} classes={{ popper: className }} enterTouchDelay={0} />
-  ))({
-    [`& .${tooltipClasses.tooltip}`]: {
-      maxWidth: 650,
-      minWidth : 300
-    },
-  });
-
-const AuthorToolTip = (author) => { 
-    if(!author)
-        return <Skeleton variant="circle" width={15} height={15} />
-
-    const src = `/api/imageProxy?imageUrl=https://images.hive.blog/u/${author}/avatar/small`;
-    return (
-        <CustomWidthTooltip 
-            title={<ProfileRowCard username={author} clickable={true}/>}
-        >
-            <p style={{display : "flex", alignItems : "center", justifyContent : "center"}}>       
-                <Link href={`/u/@${author}`} passHref>
-                    <Box sx={{display : "flex", alignItems : "center"}}><Avatar src={src} alt="" width={15} height={15} />
-                    &nbsp;&nbsp;&nbsp;@{author} &nbsp;&nbsp;&nbsp;</Box>
-                </Link>
-            </p>
-        </CustomWidthTooltip>
-    )
-}
-
-const getDate = (created) => {
-    return moment(created, "YYYY-MM-DDThh:mm:ss").calendar({
-        sameDay: '[Today]',
-        nextDay: '[Tomorrow]',
-        nextWeek: 'dddd',
-        lastDay: '[Yesterday]',
-        lastWeek: '[Last] dddd',
-        sameElse: 'DD/MM/YYYY'
-    });
-}
 
 export default function RowPostcard({ post, author, permlink, highlight}){    
-    // Data Hooks
-    const { data: session } = useSession()
 
     // (maybe Post Hook) Check if we have all data, else get HIVE Post from API
     if(!post){
@@ -174,29 +102,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
                         </CardActionArea>   
                     </Link>                
 
-                    {/* Author, Votes, Replies and Date */}
-                    <Typography variant="caption" sx={{display : "flex", alignItems : "center", flexWrap : "wrap", justifyContent : "space-between"}}>
-                        {AuthorToolTip(post.author)}
-
-                        {/* Show date when it is a big display */}
-                        <Box sx={{display : {xs : "block", sm : "none"}}}>
-                            {getDate(post.created)}                               
-                        </Box>
-
-                        {/* Line Breaker */}
-                        <Box sx={{width : {xs : "100%", sm : 0}}}></Box>
-
-                        <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                        <Favorite color={checkIfVotes(post, session) ? "primary" : "inherit"}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}
-                        <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                        <Forum /> &nbsp;&nbsp; {post.children}
-                        <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                        <PresentToAll /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
-                        <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                            {getPayOut(post)}
-                        <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                    </Typography>
-                
+                    <PostStats post={post} />
                 </CardContent>
             </Grid>
         </Grid>

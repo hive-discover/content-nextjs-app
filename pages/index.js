@@ -1,5 +1,3 @@
-import {signIn} from 'next-auth/react'
-
 import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import Divider from '@mui/material/Divider';
@@ -21,9 +19,9 @@ export default function Home() {
               color="primary" 
               size="large" 
               sx={{float : {xs : "right", sm : "right", md : "left"}}}
-              onClick={() => signIn("hivesigner")}
+              onClick={() => alert("Sign up")}
             >
-              <Login /> &nbsp;&nbsp; Login with HiveSigner
+              <Login /> &nbsp;&nbsp; Login with your HIVE Account
             </Button>
           </Grid>
         </Grid>

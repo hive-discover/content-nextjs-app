@@ -2,3 +2,7 @@
 mark {
     background: #9400a4;
 }
+
+img {
+    max-width: 100%;
+}
