@@ -3,13 +3,15 @@ import Link from 'next/link';
 
 import {Avatar, Button, Box, Divider, Card, CardContent, Typography, Skeleton} from '@mui/material'
 
-export default function ProfileRowCard({username, clickable, ...rest}){
+export default function ProfileRowCard({username, clickable, profile,...rest}){
     username = (username || "unknown").replace("@", "");
     
-    const {data : follow_data, error : follow_error} = useSWR(`/api/getFollowCount/${username}`, (url) => fetch(url).then(res => res.json()));       
-    const {data : account, error : profile_error} = useSWR(`/api/getAccount/${username}`, (url) => fetch(url).then(res => res.json()));
+    const {data : follow_data, error : follow_error} = useSWR(`/api/getFollowCount/${username}`, (url) => fetch(url).then(res => res.json()));   
+    if(!profile){
+        const {data : account, error : profile_error} = useSWR(`/api/getAccount/${username}`, (url) => fetch(url).then(res => res.json()));
+        profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};
+    }
     
-    const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};
 
     return (
         <Card sx={{ display: 'flex'}}>
@@ -27,7 +29,7 @@ export default function ProfileRowCard({username, clickable, ...rest}){
             <Box sx={{ display: 'flex', flexDirection: 'column', width : "100%" }}>
                 <CardContent>
                     <Typography variant="h5" component="h2">
-                        {profile ? profile.name : <Skeleton variant="text"/>}
+                        {profile ? (profile.name || username) : <Skeleton variant="text"/>}
                     </Typography>
                     <Typography variant="body2" component="span">
                         {profile ? profile.about : <Skeleton variant="text" height={60} />}

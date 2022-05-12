@@ -1,14 +1,17 @@
-import {useState, useEffect} from 'react';
+import {useEffect} from 'react';
 import Link from 'next/link';
 import useSWR from 'swr';
+import dynamic from 'next/dynamic';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { addPosts, setLoadMore, initTabObject } from '../../redux/slices/AuthorActivitiesSlice';
 
-import {Box, Tab, Tabs} from '@mui/material'
-import LoadingButton from '@mui/lab/LoadingButton';
+import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+const LoadingButton = dynamic(() => import('@mui/lab/LoadingButton'));
 
-import BigPostContainer from '../../components/BigPostContainer/BigPostContainer';
+const BigPostContainer = dynamic(() => import('../../components/BigPostContainer/BigPostContainer'));
 
 
 const tabs = ["blog", "posts", "activities"];
@@ -60,7 +63,7 @@ export default function AuthorInteractions({username, selectedTab}){
                     {tabs.map((_, index) => {
                         return (
                             <Link href={`/u/${username}/${tabs[index]}`} scroll={false} passHref>
-                                <Tab label={tabLabels[index]} ariaControls={index} />
+                                <Tab label={tabLabels[index]} aria-controls={index} />
                             </Link>
                         )}
                     )}

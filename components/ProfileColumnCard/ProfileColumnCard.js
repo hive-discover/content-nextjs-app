@@ -15,7 +15,7 @@ export default function ProfileColumnCard({username, clickable, ...rest}){
     return (
         <Paper elevation={2} sx={{p : 2}}>
             <Avatar
-                src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${username}/avatar/medium `}
+                src={`https://images.hive.blog/u/${username}/avatar/medium `}
                 sx={{
                     width: '128px',
                     height: '128px',

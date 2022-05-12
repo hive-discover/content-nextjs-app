@@ -1,10 +1,11 @@
 import {useRouter} from 'next/router';
 import useSWR from 'swr';
-import parse from 'html-react-parser';
 import dynamic from 'next/dynamic'
 import getDate from '../../../lib/niceTimestamp';
+import Link from 'next/link';
+import {useEffect, useState} from 'react';
 
-import {Container, Divider, Grid, Paper, Skeleton} from '@mui/material';
+import {Box, Container, Divider, Grid, Paper, Skeleton} from '@mui/material';
 import CategoryChip from '../../../components/CategoryChip/CategoryChip';
 import PostStats from '../../../components/PostStats/PostStats';
 
@@ -32,6 +33,27 @@ const HiveDiscoverAPI_Fetcher = ({data, path}) => fetch("https://api.hive-discov
   .then(res => res.json()) // Parse as JSON
   .then(res => {if(res.status !== "ok") throw new Error(res); return res;}); // Handle errors
 
+const getTags = (tags) => {
+    if(!tags) return [];
+
+    return (
+        <Box sx={{display : "flex", flexWrap : "wrap", justifyContent : "space-between"}}>
+        {tags.map((tag, index) => {
+            return (
+                <Link href={`/tag/${tag}`} key={index}>
+                    <a>#{tag}</a>
+                </Link>
+            )})}
+        </Box>)
+}
+
+const parsePostBody = async (body, setBody) => {
+    if(!body) return null;
+
+    const parse = await import('html-react-parser').then(m => m.default);
+    setBody(parse(body));
+}
+
 export default function ShowPost(props){
     const router = useRouter();
     let {category, author, permlink} = router.query;
@@ -44,6 +66,12 @@ export default function ShowPost(props){
     const {data : similarPostsByTag, error : similarPostsByTagError} = useSWR({data : {author, permlink, amount : 7, tags : [post && post.json_metadata.tags.length >= 1 ?  post.json_metadata.tags[0] : "placeholder"], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
 
     const publishedInCommunity = community && community.title && !community.error;
+
+    const [postBody, setPostBody] = useState(null);
+    useEffect(()=>{
+        if(post && post.body)
+            parsePostBody(post.body, setPostBody);
+    }, [post])
 
     return (
         <Container>
@@ -64,7 +92,10 @@ export default function ShowPost(props){
                         <p>{getDate(post ? post.created : null, "Published ")}</p>
                         <CommunityCard name={post ? post.category : null}/>                     
                         <br/>
-                        {post && post.body ? parse(post.body) : getTextLoader() }
+                        {postBody ? postBody : getTextLoader() }
+                        <br/>
+                        <Divider variant="middle" orientation='horizontal' />
+                        {getTags(post ? post.json_metadata.tags : null)}
                     </Paper>
                 </Grid>
                 <Grid item sm={12} md={4}>   

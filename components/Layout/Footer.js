@@ -44,14 +44,14 @@ export default function Footer(){
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <ListItem button> 
-                  <Link href="/about" passHref>
+                  <Link href="https://status.hive-discover.tech" target="_blank" passHref>
                     <ListItemText primary="Server Status" sx={{textAlign : "center"}}/>
                   </Link>
                 </ListItem>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <ListItem button> 
-                  <Link href="/about" passHref>
+                  <Link href="https://status.hive-discover.tech" target="_blank" passHref>
                     <ListItemText primary="Server Status" sx={{textAlign : "center"}}/>
                   </Link>
                 </ListItem>

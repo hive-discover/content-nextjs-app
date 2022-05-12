@@ -16,7 +16,7 @@ export default function CommunityCard({name}){
         <Card>
             <Link href={`/c/${name}`} passHref>
                 <CardActionArea sx={{p : 1, display : "flex", alignItems : "center", justifyContent : "flex-start"}}>
-                    <Image src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${name}/avatar/small`} width={64} height={64} style={{borderRadius : 35}}/>
+                    <Image src={`https://images.hive.blog/u/${name}/avatar/small`} width={64} height={64} style={{borderRadius : 35}}/>
                     &nbsp;&nbsp;
                     <Box>
                         <Typography variant="h6">C/{community.title}</Typography>   

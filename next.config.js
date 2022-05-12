@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   eslint : {
     ignoreDuringBuilds: true,
+  },
+  images : {
+    domains : ["images.hive.blog"],
   }
 }
 

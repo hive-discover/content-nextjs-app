@@ -3,7 +3,7 @@ import {useState} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSession, signIn } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { useMediaQuery } from '@mui/material';
 import dynamic from 'next/dynamic'
 
@@ -32,6 +32,7 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Person from '@mui/icons-material/Person';
 
 const LoggedInMenue = dynamic(() => import('./LoggedInMenue'));
+const LoginModal = dynamic(() => import('../LoginModal/LoginModal'));
 const StyledMenu = dynamic(() => import('./StyledMenu'));
 const Footer = dynamic(() => import('./Footer'));
 
@@ -213,7 +214,8 @@ export default function Layout({children, ...props}) {
   const useSideDrawer = useMediaQuery(theme.breakpoints.down('md'));
 
   // Get Session and maybe Account
-  const { data: session } = useSession()
+  const { data: session } = useSession();
+  console.log("Session:", session);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -225,6 +227,9 @@ export default function Layout({children, ...props}) {
     if(!value.items) return; // Not a menu
     [pageLinks[index].menuOpen, pageLinks[index].setMenuOpen] = useState(false);
   });
+
+  // Login Modal Opened
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   return (
     <div>
@@ -320,16 +325,14 @@ export default function Layout({children, ...props}) {
                 ? <LoggedInMenue session={session} />
               : (
                 <Button
-                  onClick={() => signIn("hivesigner")}
+                  onClick={() => setLoginModalOpen(!loginModalOpen)}
                   endIcon={<Person />}
                   variant="contained"
                   disableElevation
                 >
                   Login
                 </Button>
-              )}
-
-      
+              )}  
             </Box>
           </Toolbar>
         </AppBar>
@@ -358,6 +361,9 @@ export default function Layout({children, ...props}) {
           </Box>
         </Drawer> 
       </Box>
+            
+      {/* Login Modal  */}
+      {loginModalOpen ? <LoginModal isOpen={loginModalOpen} setIsOpen={setLoginModalOpen} /> : null}
 
       {/* Set the children here + Placeholder to not let the content stay behind the Toolbar */}
       <Box sx={{minHeight : "100vh"}}>

@@ -21,6 +21,6 @@ export default async function handler(req, res) {
     .then(result => preparePost(result))
     .then(result => reduceSize ? postReducer(result) : result)
     .then(result => res.status(200).json(result))
-    .catch(error => res.status(500).json({error: error}))
+    .catch(error => res.status(404).json({error: error}))
   }
   

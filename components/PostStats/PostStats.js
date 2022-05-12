@@ -1,6 +1,8 @@
 import Link from 'next/link';
-import {useState, useEffect} from 'react';
+import {useState} from 'react';
 import {useSession} from 'next-auth/react';
+import dynamic from 'next/dynamic';
+
 import getDate from '../../lib/niceTimestamp';
 
 import { styled } from '@mui/material/styles';
@@ -8,7 +10,6 @@ import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {Avatar, Stack, Box, Divider, Typography, Skeleton, Slider, Button} from '@mui/material'
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
 import Forum from '@mui/icons-material/Forum';
 import Favorite from '@mui/icons-material/Favorite'
@@ -18,9 +19,9 @@ import PriceCheck from '@mui/icons-material/PriceCheck'
 import ThumbUpOffAlt from '@mui/icons-material/ThumbUpOffAlt';
 import ThumbDownAlt from '@mui/icons-material/ThumbDownAlt';
 import ThumbDownOffAlt from '@mui/icons-material/ThumbDownOffAlt';
-
-import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard';
 import Close from '@mui/icons-material/Close';
+
+const ProfileRowCard = dynamic(() => import('../../components/ProfileRowCard/ProfileRowCard'), {ssr: false});
 
 
 const getPayOut = (post, imgProps) => {
@@ -30,11 +31,11 @@ const getPayOut = (post, imgProps) => {
 
         const total = (parseFloat(author_payout_value) + parseFloat(curator_payout_value)).toFixed(3);
 
-        return [<PriceCheck {...imgProps}/>, `${total} ${currency}`];      
+        return [<PriceCheck {...imgProps} key={1}/>, `${total} ${currency}`];      
     } else {
         const pending_payout_value = post.pending_payout_value;
 
-        return [<AttachMoney {...imgProps}/>, pending_payout_value]; 
+        return [<AttachMoney {...imgProps} key={1}/>, pending_payout_value]; 
     }
 }
 
@@ -63,7 +64,7 @@ const AuthorToolTip = (author) => {
     if(!author)
         return <Skeleton variant="circle" width={15} height={15} />
 
-    const src = `/api/imageProxy?imageUrl=https://images.hive.blog/u/${author}/avatar/small`;
+    const src = `https://images.hive.blog/u/${author}/avatar/small`;
     return (
         <CustomWidthTooltip 
             title={<ProfileRowCard username={author} clickable={true}/>}
@@ -78,36 +79,38 @@ const AuthorToolTip = (author) => {
     )
 }
 
-const broadcastVote = async (session, author, permlink, weight) => {
-    // Prepare POST Request
-    const header = {
-        'Content-Type' : 'application/json',
-        'Authorization': session.accessToken
-    }
-    const request_body = {"operations" : [["vote", {
-        author : author,
-        permlink : permlink,
-        voter : session.user.name,
-        weight : weight
-    }]]}
+// const broadcastVote = async (session, author, permlink, weight) => {
+//     // Prepare POST Request
+//     const header = {
+//         'Content-Type' : 'application/json',
+//         'Authorization': session.accessToken
+//     }
+//     const request_body = {"operations" : [["vote", {
+//         author : author,
+//         permlink : permlink,
+//         voter : session.user.name,
+//         weight : weight
+//     }]]}
 
 
-    const success = await fetch("https://hivesigner.com/api/broadcast", {method : "POST", headers : header, body : JSON.stringify(request_body)})
-        .then(response => response.json())
-        .then(response => new Promise((resolve, reject) => {
-            if(response.result && response.result.id)
-                return resolve(true); // Success
+//     const success = await fetch("https://hivesigner.com/api/broadcast", {method : "POST", headers : header, body : JSON.stringify(request_body)})
+//         .then(response => response.json())
+//         .then(response => new Promise((resolve, reject) => {
+//             if(response.result && response.result.id)
+//                 return resolve(true); // Success
                 
-            reject(response.response.message || "Error on Broadcasting Vote");
-        }))
-        .catch((error) => {
-            console.log("Error on Broadcasting Vote", error);
-            Notify.failure(`Error on Broadcasting Vote: ${error}`, {timeout: 5000, position : "right-bottom", clickToClose : true, passOnHover : true});
-            return false;
-        });
+//             reject(response.response.message || "Error on Broadcasting Vote");
+//         }))
+//         .catch(async (error) => {
+//             console.log("Error on Broadcasting Vote", error);
+//             const {Notify} = await import('notiflix/build/notiflix-notify-aio');
+//             Notify.failure(`Error on Broadcasting Vote: ${error}`, {timeout: 5000, position : "right-bottom", clickToClose : true, passOnHover : true});
+//             return false;
+//         });
 
-    return success;
-}
+//     return success;
+// }
+import {broadcastVote} from '../../lib/broadcastTrx';
 
 export default function PostStats({post}){
     const theme = useTheme();

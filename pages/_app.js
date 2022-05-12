@@ -11,6 +11,7 @@ import { Provider } from 'react-redux'
 
 import {store} from '../redux/store'
 import Layout from '../components/Layout/Layout'
+const ApiPing = dynamic(() => import('../components/ApiPing/ApiPing'));
 const DefaultLoader = dynamic(() => import('../components/Loading/DefaultLoader'));
 
 // Fonts
@@ -42,17 +43,19 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
         <title>HiveDiscover - Discover more on HIVE</title>
       </Head>
     
+      <ApiPing />
+
       <ThemeProvider theme={theme}>
         <CssBaseline />
-          <SessionProvider session={session}>
-            <Provider store={store}>
-              <Layout>
-                {/* Show loading State  */}
-                {loading ? <DefaultLoader /> : null }
-                <Component {...pageProps} />
-              </Layout>
-            </Provider>
-          </SessionProvider>
+            <SessionProvider session={session}>
+              <Provider store={store}>
+                <Layout>
+                  {/* Show loading State  */}
+                  {loading ? <DefaultLoader /> : null }
+                  <Component {...pageProps} />
+                </Layout>
+              </Provider>
+            </SessionProvider>
       </ThemeProvider>
     </Fragment>
   )

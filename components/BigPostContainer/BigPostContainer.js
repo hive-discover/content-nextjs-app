@@ -1,15 +1,14 @@
-
 import {Box, Divider} from '@mui/material'
 
-import RowPostCard from '../../components/RowPostCard/RowPostCard'
 import RowPostCardLoading from '../../components/RowPostCard/RowPostCardLoading'
+import RowPostCard from '../../components/RowPostCard/RowPostCard'
 
 export default function BigPostContainer({posts, isLoading, fullData, ...rest}) {
     // Show loading skeleton
     if(!posts || isLoading){
         return Array(5).fill(0).map((_, index) => [
-            (<RowPostCardLoading key={index} />),
-            (<Divider key={index} variant="middle" orientation='horizontal' />)
+            (<RowPostCardLoading key={index + "-1"} />),
+            (<Divider key={index + "-2"} variant="middle" orientation='horizontal' />)
         ]); 
     }
 
@@ -21,8 +20,8 @@ export default function BigPostContainer({posts, isLoading, fullData, ...rest}) 
         <Box>
             {posts.map((data, index) => {
                 return [
-                    (fullData ? <RowPostCard key={index} post={data} /> : <RowPostCard key={index} {...data} />),
-                    (<Divider key={index} variant="middle" orientation='horizontal' />)
+                    (fullData ? <RowPostCard key={index + "-1"} post={data} /> : <RowPostCard key={index + "-1"} {...data} />),
+                    (<Divider key={index + "-2"} variant="middle" orientation='horizontal' />)
                 ];
             })}
         </Box>

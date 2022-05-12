@@ -1,10 +1,14 @@
 import dynamic from 'next/dynamic'
 
-import { Box, Container, Divider } from "@mui/material";
+// import { Box, Container, Divider } from "@mui/material";
+import Box from "@mui/material/Box";
+import Container from "@mui/material/Container";
+import Divider from "@mui/material/Divider";
 
 import SearchBar from "../../components/Search/SearchBar";
 
 const PostResults = dynamic(() => import("../../components/Search/PostResults"));
+const AccountResults = dynamic(() => import("../../components/Search/AccountResults"));
 
 const types = ["posts", "accounts", "stockimages"]
 
@@ -20,7 +24,11 @@ export default function Search({search_query, type}) {
             <Divider variant="middle" flexItem/>
 
             {
-                search_query && (!type || type === "posts") ? <PostResults search_query={search_query} maxPostHeight={!type ? 500 : null}/> : null
+                search_query && (!type || type === "posts") ? <PostResults search_query={search_query} visiblePostsCount={type !== "posts" ? 6 : null}/> : null
+            }
+
+            {
+                search_query && (!type || type === "accounts") ? <AccountResults search_query={search_query} visibleAccountsCount={type !== "accounts" ? 6 : null}/> : null
             }
 
         </Container>

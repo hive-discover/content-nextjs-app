@@ -1,10 +1,9 @@
-
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
 import useSWR from 'swr';
 
 import {Box, Card, CardActionArea, CardContent, Skeleton, Typography, Grid} from '@mui/material'
+import myLoader from '../../lib/imageHosterLoader';
 
 const getThumbnailImage = (metadata) => {
     if(!metadata || !metadata.image)
@@ -58,7 +57,7 @@ export default function Item({author, permlink, post, highlight}){
             {thumbnail 
                 ? (<Grid item xs={12} sm={3} align="stretch" sx={{width: '100%', maxHeight: '250px', position : "relative"}}>                
                         {/* The Image is sized correctly in getThumbnailImage so we just need to set everything to 100 */}
-                        <Image src={thumbnail} alt="" width="100%" height="100%" layout='fill' objectFit='contain' style={{borderRadius : 20}}/>
+                        <Image src={thumbnail} loader={myLoader} alt="" width="100%" height="100%" layout='fill' objectFit='contain' style={{borderRadius : 20}}/>
                     </Grid>
                 ) : null}
 

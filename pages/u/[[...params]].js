@@ -1,14 +1,19 @@
 import useSWR from 'swr';
 import {useSession} from 'next-auth/react';
-import { useEffect } from 'react';
 
 import { useRouter } from 'next/router'
 import Image from 'next/image'
 
-import {Container, Grid, Box, Divider, CardActions, Button} from '@mui/material'
+import Container from '@mui/material/Container'
+import Grid from '@mui/material/Grid'
+import Divider from '@mui/material/Divider'
+import Box from '@mui/material/Box'
+import CardActions from '@mui/material/CardActions'
+import Button from '@mui/material/Button'
 
 import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard'
-import AuthorInteractions from '../../components/AuthorInteractions/AuthorInteractions';
+
+import AuthorInteractions from '../../components/AuthorInteractions/AuthorInteractions'
 
 const AccountNotFound = () => {
     const router = useRouter()

@@ -15,7 +15,7 @@ export default async function handler(req, res) {
             if(result && result.id && result.result)
                 return res.status(404).json({error : "Account not Found"}); // Account not Found
 
-            res.status(500).json({error : (err || result || "Unknown Error")});
+            res.status(404).json({error : (err || result || "Unknown Error")});
         });    
     });
 }

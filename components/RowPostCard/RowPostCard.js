@@ -1,18 +1,19 @@
 import Link from 'next/link';
 import useSWR from 'swr';
 import {useState, useEffect} from 'react';
+import dynamic from 'next/dynamic';
+
 import Image from 'next/image';
 import getDate from '../../lib/niceTimestamp';
-import parse from 'html-react-parser';
 
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import {Chip, Box, Grid, CardContent, CardActionArea, Typography} from '@mui/material'
 
-import RowPostCardLoading from './RowPostCardLoading';
+const RowPostCardLoading = dynamic(() => import('./RowPostCardLoading'));
 import CategoryChip from '../../components/CategoryChip/CategoryChip';
 import PostStats from '../../components/PostStats/PostStats';
-
+import myLoader from '../../lib/imageHosterLoader';
 
 const getThumbnailImage = (metadata, thumbnailErrors) => {
     if(!metadata || !metadata.image || metadata.length >= thumbnailErrors)
@@ -46,21 +47,41 @@ const getThumbnailImage = (metadata, thumbnailErrors) => {
     return null;
 }
 
+const doHighlighting = async (highlight, setTitle, setBody) => {
+    const parse = await import('html-react-parser').then(m => m.default);
+
+    if(highlight.text_body)
+        setBody(parse(highlight.text_body[0]));
+    if(highlight.text_title)
+        setTitle(parse(highlight.text_title[0]));
+}
+
 
 export default function RowPostcard({ post, author, permlink, highlight}){    
 
     // (maybe Post Hook) Check if we have all data, else get HIVE Post from API
     if(!post){
-        const {data : fetchedPost, error : fetchPostError} = useSWR(`/api/getContent/${author}/${permlink}?reduceSize=true`, (url)=> fetch(url).then(res => res.json()));
-        if(fetchedPost)
-            return <RowPostcard post={fetchedPost} author={author} permlink={permlink} highlight={highlight}/>
-        else
+        const {data : fetchedPost, error : fetchPostError} = useSWR(`/api/getContent/${author}/${permlink}`, (url)=> fetch(url).then(res => res.json()));
+        if(!fetchedPost)
             return <RowPostCardLoading />
+            
+        return <RowPostcard post={fetchedPost} author={author} permlink={permlink} highlight={highlight}/>           
     }
 
     const [thumbnailErrors, setThumbnailErrors] = useState(0);
     const metadata = post.json_metadata;
     const thumbnail = getThumbnailImage(metadata, thumbnailErrors);
+
+    // Set Title and Descriptions
+    const [title, setTitle] = useState(post.title);
+    const [body, setBody] = useState(metadata ? metadata.description : null);
+
+    // Parse Highlights
+    useEffect(() =>{
+        if(highlight)
+            doHighlighting(highlight, setTitle, setBody);
+
+    }, [highlight])
 
     return (
         <Grid container sx={{mt : {xs : 3, sm : 0, md : 3}, mb : {xs : 3, sm : 0, md : 3}}}>
@@ -68,7 +89,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
             {thumbnail 
                 ? (<Grid item xs={12} sm={3} align="stretch" sx={{width: '100%', minHeight : {xs : "35vh", sm : "auto"}, maxHeight: '500px', position : "relative"}}>                
                         {/* The Image is sized correctly in getThumbnailImage so we just need to set everything to 100 */}
-                        <Image src={thumbnail} onError={() => {setThumbnailErrors(thumbnailErrors + 1)}} alt="" width="100%" height="100%" layout='fill' objectFit='contain'/>
+                        <Image src={thumbnail} loader={myLoader} onError={() => {setThumbnailErrors(thumbnailErrors + 1)}} alt="Post Thumbnail" layout='fill' objectFit='contain'/>
                     </Grid>
                 ) : null}
 
@@ -78,7 +99,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
                     <Link href={post.url || "#"} scroll={false} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               
-                                {highlight && highlight.text_title ? parse(highlight.text_title[0]) : post.title}  
+                                {title}  
                                 &nbsp;&nbsp; 
                                 <CategoryChip category={post.category} />       
                                 &nbsp;&nbsp;  
@@ -89,7 +110,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
                                 />) : null}                                                                          
                             </Typography>
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
-                                {highlight && highlight.text_body ? parse(highlight.text_body[0], {}) : (metadata ? metadata.description : null)}  
+                                {body}  
                                 <br/>
 
                                 {/* Show date when it is a big display */}

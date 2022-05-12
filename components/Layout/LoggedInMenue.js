@@ -25,7 +25,7 @@ export default function LoggedInMenue({session}) {
                 onClick={(event) => { setProfileMenuOpen(event.currentTarget) }}
             >
                 <Avatar 
-                src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${session.user.name}/avatar/small`} 
+                src={`https://images.hive.blog/u/${session.user.name}/avatar/small`} 
                 variant="rounded" 
                 />
             </Button>
@@ -40,9 +40,15 @@ export default function LoggedInMenue({session}) {
                 onClose={handleProfileMenueClose}
             >
                 <Link href={`/u/@${session.user.name}`} passHref>
-                <MenuItem onClick={handleProfileMenueClose}>           
-                    <Button>Profile</Button>                       
-                </MenuItem>
+                    <MenuItem onClick={handleProfileMenueClose}>           
+                        <Button>Profile</Button>                       
+                    </MenuItem>
+                </Link>
+                <Divider />
+                <Link href={`/analytics/@${session.user.name}`} passHref>
+                    <MenuItem onClick={handleProfileMenueClose}>           
+                        <Button>Analytics</Button>                       
+                    </MenuItem>
                 </Link>
                 <Divider />
                 <MenuItem onClick={handleProfileMenueClose}>
