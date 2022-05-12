@@ -256,7 +256,7 @@ export default function Layout({children, ...props}) {
             <Link href={session ? "/explore" : "/"} passHref>
               <Button>
                 <Image 
-                  src="/img/Logo/iconOnly60.png" 
+                  src="/img/Logo/iconOnly.png" 
                   alt="" 
                   height={40} 
                   width={40} 
