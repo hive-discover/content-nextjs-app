@@ -64,7 +64,7 @@ export default function Footer(){
 
             <Box style={{width : "100%", alignItems : "center"}}>
               <Image
-                src="/img/Logo/iconOnly60.png"
+                src="/img/Logo/IconOnly.png"
                 alt=""
                 height={50}
                 width={50}
