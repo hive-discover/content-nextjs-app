@@ -11,7 +11,7 @@ import ListItemText from '@mui/material/ListItemText';
 export default function Footer(){
     return (
     <footer>
-        <Grid container>     
+        <Grid container alignItems="center">     
           <Grid item xs={6} sm={8}>
             <Grid container justifyContent="center">
               <Grid item xs={12} sm={6} md={4}>
