@@ -1,6 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/router'
 import dynamic from 'next/dynamic'
+import { RouterScrollProvider } from '@moxy/next-router-scroll';
 
 import Head from 'next/head'
 import { SessionProvider } from "next-auth/react"
@@ -47,15 +48,17 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
 
       <ThemeProvider theme={theme}>
         <CssBaseline />
-            <SessionProvider session={session}>
-              <Provider store={store}>
+          <SessionProvider session={session}>
+            <Provider store={store}>
+              <RouterScrollProvider disableNextLinkScroll={false}>
                 <Layout>
                   {/* Show loading State  */}
                   {loading ? <DefaultLoader /> : null }
                   <Component {...pageProps} />
                 </Layout>
-              </Provider>
-            </SessionProvider>
+              </RouterScrollProvider>
+            </Provider>
+          </SessionProvider>
       </ThemeProvider>
     </Fragment>
   )

@@ -89,17 +89,24 @@ export default function RowPostcard({ post, author, permlink, highlight}){
             {thumbnail 
                 ? (<Grid item xs={12} sm={3} align="stretch" sx={{width: '100%', minHeight : {xs : "35vh", sm : "auto"}, maxHeight: '500px', position : "relative"}}>                
                         {/* The Image is sized correctly in getThumbnailImage so we just need to set everything to 100 */}
-                        <Image src={thumbnail} loader={myLoader} onError={() => {setThumbnailErrors(thumbnailErrors + 1)}} alt="Post Thumbnail" layout='fill' objectFit='contain'/>
+                        <Image 
+                            src={thumbnail} 
+                            loader={myLoader} 
+                            onError={() => {setThumbnailErrors(thumbnailErrors + 1)}} 
+                            alt="Post Thumbnail" 
+                            layout='fill' 
+                            objectFit='contain'
+                        />
                     </Grid>
                 ) : null}
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
                 <CardContent sx={{width : "100%"}}>     
-                    <Link href={post.url || "#"} scroll={false} passHref>            
+                    <Link href={post.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               
-                                {title}  
+                                {post?.title}  
                                 &nbsp;&nbsp; 
                                 <CategoryChip category={post.category} />       
                                 &nbsp;&nbsp;  
@@ -110,7 +117,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
                                 />) : null}                                                                          
                             </Typography>
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
-                                {body}  
+                                { metadata?.description }  
                                 <br/>
 
                                 {/* Show date when it is a big display */}

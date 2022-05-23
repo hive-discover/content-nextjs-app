@@ -45,7 +45,7 @@ export default function ProfileColumnCard({username, clickable, ...rest}){
                 </CardContent>   
 
                 {clickable ? (
-                    <Link href={`/u/@${username}`} scroll={false} passHref>
+                    <Link href={`/u/@${username}`} passHref>
                         <Button variant="contained">View Full</Button>
                     </Link>
             ) : null}                                        

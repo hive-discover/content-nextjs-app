@@ -1,8 +1,10 @@
 import useSWR from 'swr';
 import {useSession} from 'next-auth/react';
-
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'
 import Image from 'next/image'
+import { useRouterScroll } from '@moxy/next-router-scroll';
+import {useEffect, useState} from 'react';
 
 import Container from '@mui/material/Container'
 import Grid from '@mui/material/Grid'
@@ -10,10 +12,10 @@ import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
 import CardActions from '@mui/material/CardActions'
 import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress';
 
 import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard'
-
-import AuthorInteractions from '../../components/AuthorInteractions/AuthorInteractions'
+const AuthorInteractions = dynamic(() => import('../../components/AuthorInteractions/AuthorInteractions'), {ssr: false, loading: () => <CircularProgress sx={{m : 5}}/>});
 
 const AccountNotFound = () => {
     const router = useRouter()
@@ -40,6 +42,7 @@ export default function User(props){
     const [username, selectedTab, ...rest] = router && router.query.params ? router.query.params : [];
 
     const { data: session } = useSession()
+    const { updateScroll } = useRouterScroll();
     const {data: account, error: accountError} = useSWR(`/api/getAccount/${username || "unkown"}`, (url)=> fetch(url).then(res => res.json()));
     const {data : relation, error : relationError} = useSWR(`/api/getRelationship/${session ? session.user.name : "u"}/${username}`, (url)=> fetch(url).then(res => res.json()));
 
@@ -48,6 +51,11 @@ export default function User(props){
 
     const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};    
     
+    useEffect(() => {
+        if(profile)
+            updateScroll();
+    }, [profile]);
+
     return (
         <Container>
             {/* Header Stuff */}
@@ -57,7 +65,7 @@ export default function User(props){
                 sx={{
                     minHeight : {xs : "30vh", sm : "40vh", md : "50vh"}, 
                     width : "100%", 
-                    background : `url(${"/api/imageProxy?imageUrl=" + profile.cover_image || "/img/blank-cover-image.svg"})`,
+                    background : `url(${profile.cover_image ? "/api/imageProxy?imageUrl=" + profile.cover_image : "/img/blank-cover-image.svg"})`,
                     backgroundSize : "cover",
                     backgroundPosition : "center",
                     backgroundRepeat : "no-repeat",
@@ -82,9 +90,9 @@ export default function User(props){
                 </Grid>
             </Grid>           
 
-
-            <AuthorInteractions username={username} selectedTab={selectedTab}/>                                                        
-            
+            <Box sx={{display : "flex", alignItems : "center", justifyContent : "center", width : "100%"}}>
+                <AuthorInteractions username={username} selectedTab={selectedTab} session={session}/>                                                        
+            </Box> 
         </Container>
     );
 }

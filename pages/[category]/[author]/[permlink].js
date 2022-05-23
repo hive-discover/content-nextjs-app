@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic'
 import getDate from '../../../lib/niceTimestamp';
 import Link from 'next/link';
 import {useEffect, useState} from 'react';
+import { useRouterScroll } from '@moxy/next-router-scroll';
 
 import {Box, Container, Divider, Grid, Paper, Skeleton} from '@mui/material';
 import CategoryChip from '../../../components/CategoryChip/CategoryChip';
@@ -20,7 +21,7 @@ const getTextLoader = () => {
         <Skeleton key={2} variant="text" width="100%" height={20} />,
         <Skeleton key={3} variant="text" width="80%" height={20} />,
         <br/>,
-        <Skeleton key={4} variant="rect" width="100%" height="200px" />,
+        <Skeleton key={4} variant="rect" width="100%" height="500px" />,
         <br/>,
         <Skeleton key={5} variant="text" width="100%" height={20} />,
         <Skeleton key={6} variant="text" width="80%" height={20} />,
@@ -59,6 +60,7 @@ export default function ShowPost(props){
     let {category, author, permlink} = router.query;
     author = (author || "").replace("@", "");
 
+    const { updateScroll } = useRouterScroll();
     const {data : post, error : postError} = useSWR(`/api/getContent/${author}/${permlink}`, (url)=> fetch(url).then(res => res.json()));
     const {data : community} = useSWR(`/api/getCommunity/${category}`, (url) => fetch(url).then(r => r.json()));
     const {data : similarPostsByAuthor, error : similarPostsByAuthorError} = useSWR({data : {author, permlink, amount : 7}, path : "/search/similar-by-author"}, HiveDiscoverAPI_Fetcher);
@@ -73,14 +75,20 @@ export default function ShowPost(props){
             parsePostBody(post.body, setPostBody);
     }, [post])
 
+    useEffect(()=>{
+        if(post && postBody)
+            updateScroll();
+    }, [post, postBody]);
+
     return (
         <Container>
-            <h1>
-                {post ? post.title : null}
-                &nbsp;&nbsp;
-                {post ? <CategoryChip category={post.category}/> : null}      
-                {!post ? <Skeleton key={1} variant="text" width="100%" height={40} /> : null}
-            </h1>    
+            {post ? 
+                <h1>
+                    {post.title}
+                    &nbsp;&nbsp;
+                    <CategoryChip category={post.category}/>     
+                </h1>    
+            : <Skeleton key={1} variant="text" width="100%" height={40} />}
             
             <Divider variant="middle" orientation='horizontal' />
             <PostStats post={post}/>

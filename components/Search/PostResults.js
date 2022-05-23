@@ -3,10 +3,11 @@ import useSwr from 'swr';
 import {useState, useEffect} from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import { Button, Box, Pagination, Typography } from '@mui/material';
+import { Button, Box, CircularProgress, Pagination, Typography } from '@mui/material';
 
-import BigPostContainer from "../../components/BigPostContainer/BigPostContainer";
+const BigPostContainer = dynamic(() => import('../../components/BigPostContainer/BigPostContainer'), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
 const fetchSearch = async ({searchBody}) => {
     const url = "https://api.hive-discover.tech/v1/search/posts";

@@ -10,7 +10,7 @@ export default function CategoryChip({category}){
     const href = isCommunity ? `/c/${category}` : `/tag/${category}`;
 
     return(
-        <Link href={href} scroll={false} passHref>
+        <Link href={href} passHref>
             <Chip label={isCommunity ? community.title : "#" + category} onClick={()=>{}}/>
         </Link>
     )

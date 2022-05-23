@@ -63,7 +63,7 @@ export default function Item({author, permlink, post, highlight}){
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
-                <Link href={post.url || "#"} scroll={false} passHref>            
+                <Link href={post.url || "#"} passHref>            
                     <CardActionArea sx={{pl : 2, mt : 1, mb : 1}}>
                         <Typography variant="h6" sx={{
                             display: '-webkit-box',

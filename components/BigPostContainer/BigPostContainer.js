@@ -1,15 +1,20 @@
+import dynamic from 'next/dynamic';
 import {Box, Divider} from '@mui/material'
 
 import RowPostCardLoading from '../../components/RowPostCard/RowPostCardLoading'
-import RowPostCard from '../../components/RowPostCard/RowPostCard'
+const RowPostCard = dynamic(() => import('../../components/RowPostCard/RowPostCard'), {ssr: false, loading: () => <RowPostCardLoading />});
 
-export default function BigPostContainer({posts, isLoading, fullData, ...rest}) {
+export default function BigPostContainer({posts, isLoading, fullData, loadingAmount = 7, ...rest}) {
     // Show loading skeleton
     if(!posts || isLoading){
-        return Array(5).fill(0).map((_, index) => [
-            (<RowPostCardLoading key={index + "-1"} />),
-            (<Divider key={index + "-2"} variant="middle" orientation='horizontal' />)
-        ]); 
+        return <Box sx={{width : "100%"}}>
+                    {
+                        Array(loadingAmount).fill(0).map((_, index) => [
+                            (<RowPostCardLoading key={index + "-1"} style={{width : "100%"}} />),
+                            (<Divider key={index + "-2"} variant="middle" orientation='horizontal' />)
+                        ])
+                    }
+            </Box>
     }
 
     // No posts to display

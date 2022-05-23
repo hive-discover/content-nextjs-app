@@ -79,37 +79,6 @@ const AuthorToolTip = (author) => {
     )
 }
 
-// const broadcastVote = async (session, author, permlink, weight) => {
-//     // Prepare POST Request
-//     const header = {
-//         'Content-Type' : 'application/json',
-//         'Authorization': session.accessToken
-//     }
-//     const request_body = {"operations" : [["vote", {
-//         author : author,
-//         permlink : permlink,
-//         voter : session.user.name,
-//         weight : weight
-//     }]]}
-
-
-//     const success = await fetch("https://hivesigner.com/api/broadcast", {method : "POST", headers : header, body : JSON.stringify(request_body)})
-//         .then(response => response.json())
-//         .then(response => new Promise((resolve, reject) => {
-//             if(response.result && response.result.id)
-//                 return resolve(true); // Success
-                
-//             reject(response.response.message || "Error on Broadcasting Vote");
-//         }))
-//         .catch(async (error) => {
-//             console.log("Error on Broadcasting Vote", error);
-//             const {Notify} = await import('notiflix/build/notiflix-notify-aio');
-//             Notify.failure(`Error on Broadcasting Vote: ${error}`, {timeout: 5000, position : "right-bottom", clickToClose : true, passOnHover : true});
-//             return false;
-//         });
-
-//     return success;
-// }
 import {broadcastVote} from '../../lib/broadcastTrx';
 
 export default function PostStats({post}){
@@ -165,14 +134,14 @@ export default function PostStats({post}){
                 <Box sx={{width : {xs : "100%", sm : 0}}}></Box>
 
                 <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <Favorite fontSize={upSM ? "medium" : "large"} color={hisVote === "up" ? "primary" : "inherit"} onClick={onClickVote}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}                           
-                {hisVote === "down" ? <ThumbDownAlt fontSize={upSM ? "medium" : "large"} color="secondary" /> : null}
+                <Favorite fontSize={"medium"} color={hisVote === "up" ? "primary" : "inherit"} onClick={onClickVote}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}                           
+                {hisVote === "down" ? <ThumbDownAlt fontSize={"medium"} color="secondary" /> : null}
                 <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <Link href={post.url + "#comments"} scroll={false} passHref><Forum fontSize={upSM ? "medium" : "large"} /></Link> &nbsp;&nbsp; {post.children}
+                <Link href={post.url + "#comments"} passHref><Forum fontSize={"medium"} /></Link> &nbsp;&nbsp; {post.children}
                 <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <PresentToAll fontSize={upSM ? "medium" : "large"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
+                <PresentToAll fontSize={"medium"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
                 <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                    {getPayOut(post, {fontSize : upSM ? "medium" : "large"})}
+                    {getPayOut(post, {fontSize : "medium"})}
             </Typography>
 
 
