@@ -1,12 +1,14 @@
-import {useEffect, useState} from 'react';
-import Router, { useRouter } from 'next/router';
+import {useState} from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import { styled, alpha, useTheme } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 
-import { Box, Button, Divider, Grid, InputBase, Typography, FormControl, InputLabel, Input, FormHelperText,Select,MenuItem } from "@mui/material";
-
+import { Box, Button, Divider, CircularProgress, Grid, InputBase, Typography } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
+
+const PostSearchForm = dynamic(() => import('./PostSearchForm'), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -41,82 +43,25 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
 }));
 
-const getSearchOptions = (type, queryValue) => {
-    if(!type){
-        // Just let the user choose the type
-        return (
-            <Box>
-                Filter Search Types: 
-                    <Link href={`/search/posts/${queryValue}`} passHref><Button>Posts</Button></Link>
-                    
-                    <Link href={`/search/accounts/${queryValue}`} passHref><Button>Accounts</Button></Link>
-                    
-                    <Link href={`/search/stockimages/${queryValue}`} passHref><Button>StockImages</Button></Link>
-            </Box>
-        )
-    }
-
-    if(type === "posts"){
-        return (
-            <Grid container sx={{m : 1, width : "100%"}} justifyContent="center" spacing={3}>
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="component-simple">By Author</InputLabel>
-                        <Input id="component-simple" value={""} 
-                            // onChange={handleChange} 
-                        />
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="post-input-tags">Tags to include</InputLabel>
-                        <Input
-                            id="post-input-tags"
-                            value={""}
-                            // onChange={handleChange}
-                            aria-describedby="post-input-tags-helper"
-                        />
-                        <FormHelperText id="post-input-tags-helper">
-                            Separate multiple tags with spaces
-                        </FormHelperText>
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="post-input-langs">Languages</InputLabel>
-                        <Input
-                            id="post-input-langs"
-                            value={""}
-                            // onChange={handleChange}
-                            aria-describedby="post-input-langs-helper"
-                        />
-                        <FormHelperText id="post-input-langs-helper">
-                            Country codes separated by spaces
-                        </FormHelperText>
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl fullWidth>
-                        <InputLabel id="demo-simple-select-label">Sort mode</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={"smart"}
-                            label="Sort mode"
-                            // onChange={handleChange}
-                        >
-                            <MenuItem value="smart">Smart</MenuItem>
-                            <MenuItem value="relevance">Relevance</MenuItem>
-                            <MenuItem value="latest">Latest</MenuItem>
-                            <MenuItem value="oldest">Oldest</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Grid>
-            </Grid>
-        )
+const getSearchOptions = (type, queryValue, setQueryValue, onClickGo) => {
+    switch(type){
+        case "posts":
+            return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} onClick={onClickGo} />
+        case "accounts":
+            return null;
+        case "stockimages":
+            return null;
+        default:
+            return (
+                <Box>
+                    Filter Search Types: 
+                        <Link href={`/search/posts/${queryValue.query}`} passHref><Button>Posts</Button></Link>
+                        
+                        <Link href={`/search/accounts/${queryValue.query}`} passHref><Button>Accounts</Button></Link>
+                        
+                        <Link href={`/search/stockimages/${queryValue.query}`} passHref><Button>StockImages</Button></Link>
+                </Box>
+            );
     }
 }
 
@@ -124,11 +69,21 @@ export default function SearchBar({type, search_query}){
     const router = useRouter();
 
     const [queryValue, setQueryValue] = useState(search_query);
-    const [queryType, setQueryType] = useState(type);
 
     const onClickGo = () => {
-        if(queryValue.length > 0){
-            router.push(`/search/${queryType ? (queryType + "/") : ""}${queryValue}`);
+        let params = [];
+        if(queryValue.authors && queryValue.authors.length > 0){
+            params.push(`authors=${queryValue.authors.join(",")}`);
+        }
+        if(queryValue.tags && queryValue.tags.length > 0){
+            params.push(`tags=${queryValue.tags.join(",")}`);
+        }
+        if(queryValue.parent_permlinks && queryValue.parent_permlinks.length > 0){
+            params.push(`parent_permlinks=${queryValue.parent_permlinks.join(",")}`);
+        }
+
+        if(queryValue.query.length > 0){
+            router.push(`/search/${type ? (type + "/") : ""}${params.length > 0 ? params.join("/") + "/" : ""}${queryValue.query}`);
         }
     }
     
@@ -154,14 +109,14 @@ export default function SearchBar({type, search_query}){
                         <StyledInputBase
                             placeholder="Search…"
                             inputProps={{ 'aria-label': 'search' }}
-                            value={queryValue}
+                            value={queryValue?.query}
                             sx={{width : "100%"}}
-                            onChange={(event) => {setQueryValue(event.target.value);}}     
+                            onChange={(event) => {setQueryValue({...queryValue, query : event.target.value });}}     
                             onKeyPress={(event) => {if(event.key === "Enter"){onClickGo();}}}                       
                         />
                     </Search>                    
 
-                    {getSearchOptions(type, queryValue)}
+                    {getSearchOptions(type, queryValue, setQueryValue, onClickGo)}
                 </Grid>
 
                 <Grid item xs={12} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>

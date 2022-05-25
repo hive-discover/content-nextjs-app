@@ -25,7 +25,7 @@ export default function AccountResults(props){
     const [pageNumber, setPageNumber] = useState(1);
 
     const amountPerPage = 24;
-    const searchBody = {query : search_query, amount : visibleAccountsCount ? visibleAccountsCount : amountPerPage, highlight : true, page_number : pageNumber};
+    const searchBody = {...search_query, amount : visibleAccountsCount ? visibleAccountsCount : amountPerPage, highlight : true, page_number : pageNumber};
     const {data : searchResult, error : searchError} = useSwr({searchBody, pageNumber}, fetchSearch);
     const isLoading = !searchResult && searchError !== null;
 
@@ -33,9 +33,14 @@ export default function AccountResults(props){
     const showPagination = matched_accs > amountPerPage && !isLoading && !visibleAccountsCount 
     return (
         <Box sx={{width : "100%"}}>
+            <br/>
             <Typography variant="h4">Accounts - Search Results</Typography>
             
-            {searchResult ? <Typography variant="subtitle" sx={{mb : 3}}>Showing {searchResult.accounts.length} {matched_accs > 0 ? ` of ${matched_accs} ` : null} accounts in {searchResult.time}s</Typography> : null}
+            {
+                searchResult 
+                ? <Typography variant="subtitle" sx={{mb : 3}}>Showing {searchResult.accounts.length} {matched_accs > 0 ? ` of ${matched_accs} ` : null} accounts in {searchResult.time}s</Typography> 
+                : null
+            }
             
             {
                 showPagination 
@@ -55,15 +60,15 @@ export default function AccountResults(props){
             }
             
             {
-                searchResult ? (
-                    <Grid container spacing={3} alignContent="center">
+                searchResult 
+                ?   <Grid container spacing={3} alignItems="center">
                         {searchResult.accounts.map((acc, index) => (
-                            <Grid item key={index} xs={12} sm={6} md={4} alignContent="center">
+                            <Grid item key={index} xs={12} sm={6} md={4}>
                                 <ProfileColumnCard username={acc.name} profile={acc.json_metadata.profile} clickable={true}/>
                             </Grid>
                         ))}
-                   </Grid>
-                ) : null
+                    </Grid>
+                : null
             }
         
             {
@@ -83,10 +88,15 @@ export default function AccountResults(props){
                 : null
             }
 
+            <br/>
+
             {
                 visibleAccountsCount > 0 && matched_accs > visibleAccountsCount && !isLoading  
-                ? <Link href={`/search/accounts/${search_query}`}><Button variant="contained">View All Results</Button></Link> : null
+                ? <center><Link href={`/search/accounts/${search_query}`}><Button variant="contained">View All Results</Button></Link></center> 
+                : null
             }
+
+            <br/>
         </Box>
     )
 }

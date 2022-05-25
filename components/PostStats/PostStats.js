@@ -122,26 +122,25 @@ export default function PostStats({post}){
     return (
         <Box>
             {/* Author, Votes, Replies and Date */}
-            <Typography variant="caption" sx={{display : "flex", alignItems : "center", flexWrap : "wrap", justifyContent : "space-between"}}>
-                {AuthorToolTip(post.author)}
+            <Typography variant="caption">
+                <Box sx={{display : "flex", justifyContent : "space-between", alignItems : "center", flexWrap : "nowrap"}}>
+                    {AuthorToolTip(post.author)}
 
-                {/* Show date when it is a big display */}
-                <Box sx={{display : {xs : "block", sm : "none"}}}>
+                    {/* Show date when it is a big display */}
                     {getDate(post.created)}                               
                 </Box>
-
-                {/* Line Breaker */}
-                <Box sx={{width : {xs : "100%", sm : 0}}}></Box>
-
-                <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <Favorite fontSize={"medium"} color={hisVote === "up" ? "primary" : "inherit"} onClick={onClickVote}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}                           
-                {hisVote === "down" ? <ThumbDownAlt fontSize={"medium"} color="secondary" /> : null}
-                <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <Link href={post.url + "#comments"} passHref><Forum fontSize={"medium"} /></Link> &nbsp;&nbsp; {post.children}
-                <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                <PresentToAll fontSize={"medium"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
-                <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                <Box sx={{display : "flex", justifyContent : "space-between", alignItems : "center", flexWrap : "nowrap"}}>
+                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                    <Favorite fontSize={"medium"} color={hisVote === "up" ? "primary" : "inherit"} onClick={onClickVote}/> &nbsp;&nbsp; {post.stats ? post.stats.total_votes : null}                           
+                    {hisVote === "down" ? <ThumbDownAlt fontSize={"medium"} color="secondary" /> : null}
+                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                    <Link href={post.url + "#comments"} passHref><Forum fontSize={"medium"} /></Link> &nbsp;&nbsp; {post.children}
+                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                    <PresentToAll fontSize={"medium"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
+                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
                     {getPayOut(post, {fontSize : "medium"})}
+                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                </Box>
             </Typography>
 
 

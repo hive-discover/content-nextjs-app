@@ -11,6 +11,7 @@ export default function ProfileColumnCard({username, clickable, ...rest}){
     const {data : account, error : profile_error} = useSWR(`/api/getAccount/${username}`, (url) => fetch(url).then(res => res.json()));
     
     const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};
+    const isLoading = !account && !profile_error;
 
     return (
         <Paper elevation={2} sx={{p : 2}}>
@@ -25,9 +26,18 @@ export default function ProfileColumnCard({username, clickable, ...rest}){
             <Box sx={{ display: 'flex', flexDirection: 'column', width : "100%" }}>
                 <CardContent>
                     <Typography variant="h5" component="h2">
-                        {profile ? profile.name : <Skeleton variant="text"/>}
+                        {
+                            isLoading 
+                                ? <Skeleton variant="text"/> 
+                                : (profile.name ? profile.name : "@" + username)
+                        }
                     </Typography>
-                    <Typography variant="body2" component="span" sx={{textAlign:"center"}}>
+                    <Typography variant="body2" component="span" sx={{
+                            display: '-webkit-box',
+                            overflow: 'hidden',
+                            WebkitBoxOrient: 'vertical',
+                            WebkitLineClamp: 3,
+                            }}>
                         {profile ? profile.about : <Skeleton variant="text" height={60} />}
                     </Typography>
                     

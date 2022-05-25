@@ -91,7 +91,7 @@ export default function exploreModeVise(props){
             }
             {
                 // Show loading indicator
-                (isLoading) ? <BigPostContainer posts={null} isLoading={true} loadingAmount={50} /> : null
+                (isLoading) ? <BigPostContainer posts={null} isLoading={true} loadingAmount={25} /> : null
             }
             {
                 // Show error
@@ -99,7 +99,7 @@ export default function exploreModeVise(props){
             }
             {
                 // Refresh
-                (posts && mutate) ? <center><Button variant="contained" onClick={mutate}>Refresh Posts</Button></center> : null
+                (posts && mutate) ? <center><Button variant="contained" onClick={() => {window.scrollTo(0,0); mutate()}}>Refresh Posts</Button></center> : null
             }
            
 

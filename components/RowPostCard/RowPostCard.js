@@ -4,7 +4,6 @@ import {useState, useEffect} from 'react';
 import dynamic from 'next/dynamic';
 
 import Image from 'next/image';
-import getDate from '../../lib/niceTimestamp';
 
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -118,14 +117,6 @@ export default function RowPostcard({ post, author, permlink, highlight}){
                             </Typography>
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
                                 { metadata?.description }  
-                                <br/>
-
-                                {/* Show date when it is a big display */}
-                                <Box sx={{display : {xs : "none", sm : "block"}}}>
-                                    <small>                                
-                                        {getDate(post.created)}                              
-                                    </small>
-                                </Box>
                             </Typography>
                         </CardActionArea>   
                     </Link>                
