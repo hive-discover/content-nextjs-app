@@ -12,15 +12,19 @@ import {Chip, Box, Grid, CardContent, CardActionArea, Typography} from '@mui/mat
 const RowPostCardLoading = dynamic(() => import('./RowPostCardLoading'));
 import CategoryChip from '../../components/CategoryChip/CategoryChip';
 import PostStats from '../../components/PostStats/PostStats';
+
 import myLoader from '../../lib/imageHosterLoader';
+import useHivePost from '../../lib/hooks/hive/useHivePost';
 
 const getThumbnailImage = (metadata, thumbnailErrors) => {
-    if(!metadata || !metadata.image || metadata.length >= thumbnailErrors)
-        return null;
-
     const theme = useTheme();
     const upMD = useMediaQuery(theme.breakpoints.up('md'));
     const upSM = useMediaQuery(theme.breakpoints.up('sm')); 
+
+
+    if(!metadata || !metadata.image || metadata.length >= thumbnailErrors)
+        return null;
+
     // img widths:
     //  * <= md: 300px
     //  * == sm: 250px
@@ -57,30 +61,29 @@ const doHighlighting = async (highlight, setTitle, setBody) => {
 
 
 export default function RowPostcard({ post, author, permlink, highlight}){    
+    post = {author, permlink, ...post}; // ensure author and permlink are set
 
-    // (maybe Post Hook) Check if we have all data, else get HIVE Post from API
-    if(!post){
-        const {data : fetchedPost, error : fetchPostError} = useSWR(`/api/getContent/${author}/${permlink}`, (url)=> fetch(url).then(res => res.json()));
-        if(!fetchedPost)
-            return <RowPostCardLoading />
-            
-        return <RowPostcard post={fetchedPost} author={author} permlink={permlink} highlight={highlight}/>           
-    }
-
+    // Set hooks 
+    const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);
     const [thumbnailErrors, setThumbnailErrors] = useState(0);
-    const metadata = post.json_metadata;
-    const thumbnail = getThumbnailImage(metadata, thumbnailErrors);
+    const [title, setTitle] = useState(newestPost?.title);
+    const [body, setBody] = useState(newestPost?.json_metadata?.description);
 
-    // Set Title and Descriptions
-    const [title, setTitle] = useState(post.title);
-    const [body, setBody] = useState(metadata ? metadata.description : null);
+    // Parse highlight OR use post metadata
+    useEffect(() => {
+        if(highlight) // we have to mark
+            doHighlighting(highlight, setTitle, setBody);  
+        else if(newestPost && !postError){
+            // Nothing to mark
+            setTitle(newestPost.title);
+            setBody(newestPost.json_metadata?.description);
+        }
+    }, [newestPost, highlight]);
+    
+    const thumbnail = getThumbnailImage(newestPost?.json_metadata, thumbnailErrors);
 
-    // Parse Highlights
-    useEffect(() =>{
-        if(highlight)
-            doHighlighting(highlight, setTitle, setBody);
-
-    }, [highlight])
+    if(postLoading)
+        return <RowPostCardLoading />
 
     return (
         <Grid container sx={{mt : {xs : 3, sm : 0, md : 3}, mb : {xs : 3, sm : 0, md : 3}}}>
@@ -102,26 +105,26 @@ export default function RowPostcard({ post, author, permlink, highlight}){
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
                 <CardContent sx={{width : "100%"}}>     
-                    <Link href={post.url || "#"} passHref>            
+                    <Link href={newestPost.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               
-                                {post?.title}  
+                                {title}  
                                 &nbsp;&nbsp; 
-                                <CategoryChip category={post.category} />       
+                                <CategoryChip category={newestPost.category} />       
                                 &nbsp;&nbsp;  
-                                {post.isReblog || post.isCrosspost ? (<Chip 
-                                    label={post.isReblog ? "Reblogged" : "Crosspost"} 
+                                {newestPost.isReblog || newestPost.isCrosspost ? (<Chip 
+                                    label={newestPost.isReblog ? "Reblogged" : "Crosspost"} 
                                     color="primary"
                                     size="small"
                                 />) : null}                                                                          
                             </Typography>
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
-                                { metadata?.description }  
+                                { body }  
                             </Typography>
                         </CardActionArea>   
                     </Link>                
 
-                    <PostStats post={post} />
+                    <PostStats post={newestPost} />
                 </CardContent>
             </Grid>
         </Grid>

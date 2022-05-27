@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import useSWR from 'swr';
 
-import {Box, Card, CardActionArea, CardContent, Skeleton, Typography, Grid} from '@mui/material'
+import {Box, Card, CardActionArea, Skeleton, Typography, Grid} from '@mui/material'
 import myLoader from '../../lib/imageHosterLoader';
+import useHivePost from '../../lib/hooks/hive/useHivePost';
 
 const getThumbnailImage = (metadata) => {
     if(!metadata || !metadata.image)
@@ -24,7 +24,6 @@ const getThumbnailImage = (metadata) => {
 }
 
 const loader = ()=>{
-
     return (
         <Card sx={{p : 1, display : "flex", alignItems : "center", justifyContent : "flex-start"}}>
             <Skeleton variant="rect" width={75} height={75} style={{borderRadius : 5}}/>
@@ -38,17 +37,18 @@ const loader = ()=>{
     )
 }
 
-export default function Item({author, permlink, post, highlight}){
-    
-    if(!post){
-        const {data : fetchedPost, error : fetchPostError} = useSWR(`/api/getContent/${author}/${permlink}?reduceSize=true`, (url)=> fetch(url).then(res => res.json()));
-        if(fetchedPost)
-            return <Item author={fetchedPost.author} permlink={permlink} post={fetchedPost} highlight={highlight}/>;
-        else 
-            return loader();
-    }
+export default function Item({author, permlink, post}){
+    post = {author, permlink, ...post}; // ensure author and permlink are set
 
-    const metadata = post.json_metadata;
+    const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);
+
+    if(postLoading) 
+        return loader();
+    if(postError)
+        return null;
+
+
+    const metadata = newestPost.json_metadata;
     const thumbnail = getThumbnailImage(metadata);
 
     return (
@@ -63,7 +63,7 @@ export default function Item({author, permlink, post, highlight}){
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
-                <Link href={post.url || "#"} passHref>            
+                <Link href={newestPost.url || "#"} passHref>            
                     <CardActionArea sx={{pl : 2, mt : 1, mb : 1}}>
                         <Typography variant="h6" sx={{
                             display: '-webkit-box',
@@ -72,7 +72,7 @@ export default function Item({author, permlink, post, highlight}){
                             WebkitLineClamp: 2,
                             }}
                         >
-                            {highlight && highlight.text_title ? parse(highlight.text_title[0]) : post.title}
+                            {newestPost.title}
                         </Typography>   
                         <Typography variant="caption" sx={{
                             display: '-webkit-box',
@@ -81,7 +81,7 @@ export default function Item({author, permlink, post, highlight}){
                             WebkitLineClamp: 2,
                             }}
                         >
-                            {highlight && highlight.text_body ? parse(highlight.text_body[0], {}) : (metadata ? metadata.description : null)}
+                            {metadata?.description}
                         </Typography> 
                     </CardActionArea>   
                 </Link>                

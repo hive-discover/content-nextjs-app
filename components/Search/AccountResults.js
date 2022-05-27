@@ -92,7 +92,7 @@ export default function AccountResults(props){
 
             {
                 visibleAccountsCount > 0 && matched_accs > visibleAccountsCount && !isLoading  
-                ? <center><Link href={`/search/accounts/${search_query}`}><Button variant="contained">View All Results</Button></Link></center> 
+                ? <center><Link href={`/search/accounts/${search_query.query}`}><Button variant="contained">View All Results</Button></Link></center> 
                 : null
             }
 

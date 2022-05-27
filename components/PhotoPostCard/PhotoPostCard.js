@@ -1,4 +1,3 @@
-import useSWR from 'swr';
 import Link from 'next/link';
 
 import {CardActionArea, Grid, Typography} from '@mui/material'
@@ -11,13 +10,14 @@ import PostStats from '../../components/PostStats/PostStats';
 import PhotoPostCardLoading from '../../components/PhotoPostCard/PhotoPostCardLoading';
 
 import PhotoLoader from '../../lib/imageHosterLoader'
+import useHivePost from '../../lib/hooks/hive/useHivePost';
 
 const setImageCaroussel = (metadata, post_url) => {
     if(!metadata || !metadata.image || !Array.isArray(metadata.image) || metadata.image.length === 0)
         return null;
 
-    if(metadata.image.length > 5)
-        metadata.image = metadata.image.slice(0, 5);
+    if(metadata.image.length > 3)
+        metadata.image = metadata.image.slice(0, 3);
     
     return (
         <Carousel 
@@ -33,11 +33,11 @@ const setImageCaroussel = (metadata, post_url) => {
                                     alt={"Image " + (index + 1)}
                                     style={{
                                         height : 330,
-                                        filter: index === 4 ? "blur(10px)" : null
+                                        filter: index === 2 ? "blur(10px)" : null
                                     }}
                                 />
                                 
-                                    {index === 4  ? <p className='legend'><Link href={post_url || "#"} passHref>View all Images</Link></p> : null}
+                                    {index === 2  ? <p className='legend'><Link href={post_url || "#"} passHref>View all Images</Link></p> : null}
                                 
                             </div>
                         );
@@ -47,21 +47,18 @@ const setImageCaroussel = (metadata, post_url) => {
     )
 }
 
-export default function PhotoPostCard({post, author, permlink, highlight}){
+export default function PhotoPostCard({post, author, permlink}){
+    post = {author, permlink, ...post}; // ensure author and permlink are set
 
-    if(!post){
-        const {data : fetchedPost, error : fetchPostError} = useSWR(`/api/getContent/${author}/${permlink}`, (url)=> fetch(url).then(res => res.json()));
-        if(fetchPostError || fetchedPost?.error)
-            return null;
-        if(!fetchedPost)
-            return <PhotoPostCardLoading />
-            
-        return <PhotoPostCard post={fetchedPost} author={author} permlink={permlink} highlight={highlight}/>           
-    }
+    const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);
+    if(postLoading)
+        return <PhotoPostCardLoading />  // pending
+    if(postError)
+        return null; // Error loading post  
 
     return (
         <Grid item xs={12} sm={6} md={4}>
-            <Link href={post.url || "#"} passHref>  
+            <Link href={newestPost.url || "#"} passHref>  
                 <CardActionArea>
                     <Typography variant="h5" component="h2" sx={{
                         display: '-webkit-box',
@@ -71,17 +68,17 @@ export default function PhotoPostCard({post, author, permlink, highlight}){
                         mb : 1,
                         height : 65
                     }}>                               
-                        {post.title}  
+                        {newestPost.title}  
                         &nbsp;&nbsp; 
-                        {post ? <CategoryChip category={post.category} /> : null}                                                                               
+                        {newestPost ? <CategoryChip category={newestPost.category} /> : null}                                                                               
                     </Typography>
                 </CardActionArea>
             </Link>        
             
-            {setImageCaroussel(post.json_metadata, post.url)}
+            {setImageCaroussel(newestPost.json_metadata, newestPost.url)}
             
 
-            <PostStats post={post} showTimestamp={true}/>
+            <PostStats post={newestPost} showTimestamp={true}/>
         </Grid>
     )
 }

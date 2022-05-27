@@ -61,7 +61,7 @@ export default function StockImageResults({search_query, visiblePostsCount}){
 
             {
                 visiblePostsCount > 0 && matched_docs > visiblePostsCount && !isLoading  
-                ? <center><Link href={`/search/posts/${search_query}`}><Button variant="contained">View All Results</Button></Link></center> : null
+                ? <center><Link href={`/search/posts/${search_query.query}`}><Button variant="contained">View All Results</Button></Link></center> : null
             }
             
             <br/>

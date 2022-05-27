@@ -148,7 +148,7 @@ export default function PostStats({post}){
             { !hisVote && openVoteMenue && session ? 
                 (<Stack spacing={2} direction="row" sx={{ mt: 2}} alignItems="center" justifyItems="center">
                     <Button variant="outlined" color="info" onClick={onClickUpvote}><ThumbUpOffAlt /></Button>
-                    <Slider valueLabelDisplay="auto" value={voteWeight} onChange={(event, newValue) => {setVoteWeight(newValue);}} sx={{minWidth : "200px"}}/>
+                    <Slider valueLabelDisplay="auto" value={voteWeight} onChange={(event, newValue) => {setVoteWeight(newValue);}}/>
                     <Button variant="outlined" color="error" onClick={onClickDownvote}><ThumbDownOffAlt /></Button>
                     <Divider variant="middle" orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
                     <Button variant="outlined" color="primary" onClick={()=>{setOpenVoteMenue(false)}} title="Cancel vote"><Close/></Button>

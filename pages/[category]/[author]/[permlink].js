@@ -3,12 +3,15 @@ import useSWR from 'swr';
 import dynamic from 'next/dynamic'
 import getDate from '../../../lib/niceTimestamp';
 import Link from 'next/link';
-import {useEffect, useState} from 'react';
+import {useEffect, useState, useRef} from 'react';
 import { useRouterScroll } from '@moxy/next-router-scroll';
+import {useSession} from 'next-auth/react';
 
 import {Box, Container, Divider, Grid, Paper, Skeleton} from '@mui/material';
 import CategoryChip from '../../../components/CategoryChip/CategoryChip';
 import PostStats from '../../../components/PostStats/PostStats';
+import useIntersection from '../../../lib/hooks/useIntersection'
+import useHivePost from '../../../lib/hooks/hive/useHivePost';
 
 const ProfileColumnCard = dynamic(() => import('../../../components/ProfileColumnCard/ProfileColumnCard'));
 const CommunityCard = dynamic(() => import('../../../components/CommunityCard/CommunityCard'));
@@ -61,23 +64,56 @@ export default function ShowPost(props){
     author = (author || "").replace("@", "");
 
     const { updateScroll } = useRouterScroll();
-    const {data : post, error : postError} = useSWR(`/api/getContent/${author}/${permlink}`, (url)=> fetch(url).then(res => res.json()));
+    const { data: session } = useSession()
+    const {data : post, pending : postLoading, error : postError} = useHivePost({author, permlink});
     const {data : community} = useSWR(`/api/getCommunity/${category}`, (url) => fetch(url).then(r => r.json()));
     const {data : similarPostsByAuthor, error : similarPostsByAuthorError} = useSWR({data : {author, permlink, amount : 7}, path : "/search/similar-by-author"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByCommunity, error : similarPostsByCommunityError} = useSWR({data : {author, permlink, amount : 7, parent_permlinks : [category], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByTag, error : similarPostsByTagError} = useSWR({data : {author, permlink, amount : 7, tags : [post && post.json_metadata.tags.length >= 1 ?  post.json_metadata.tags[0] : "placeholder"], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
 
     const publishedInCommunity = community && community.title && !community.error;
+    const [isLoading, setLoading] = useState(true);
 
+    // Parse Body 
     const [postBody, setPostBody] = useState(null);
     useEffect(()=>{
-        if(post && post.body)
-            parsePostBody(post.body, setPostBody);
+        if(post && post.body){
+            parsePostBody(post.body, setPostBody)
+            .then(()=>setLoading(false));
+        }
     }, [post])
 
+    // Account-Tracking with Events
+    // * Tracking Function
+    const trackEvents = async (EVENT_NAME) => {
+        //alert(EVENT_NAME);
+    }
+    //  * Opened the Post
     useEffect(()=>{
-        if(post && postBody)
+        if(post?.permlink && post?.author && session)
+            trackEvents("post_opened"); // Only once
+    }, [post, session]);
+    //  * Post read completely
+    const postEndRef = useRef();
+    const postEndInViewport = useIntersection(postEndRef, '0px');
+    useEffect(()=>{
+        if(postEndInViewport && !isLoading && session)
+            trackEvents("post_full_read"); // Only once
+    }, [postEndInViewport, isLoading, session]);
+    //  * onScroll to determine time user spent on post
+    const handleScroll = ()=>{trackEvents("post_scroll")};
+    useEffect(() => {
+        if(!session) return;
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    });
+    
+
+    // Do scroll restoration
+    useEffect(()=>{
+        if(post && postBody){
             updateScroll();
+        }
     }, [post, postBody]);
 
     return (
@@ -92,7 +128,6 @@ export default function ShowPost(props){
             
             <Divider variant="middle" orientation='horizontal' />
             <PostStats post={post}/>
-            <Divider variant="middle" orientation='horizontal' />
 
             <Grid container spacing={2} sx={{mt : 1, mb : 1}} alignItems="stretch">
                 <Grid item sm={12} md={8}>
@@ -129,7 +164,9 @@ export default function ShowPost(props){
 
             <Divider variant="middle" orientation='horizontal' />
             <PostStats post={post}/>
-            <Divider variant="middle" orientation='horizontal' />
+
+            {/* Placeholder Tag to check, if user read the whole post */}
+            <Box ref={postEndRef} />
 
             <Paper elevation={2} sx={{mt : 1, mb : 1, p : 2}}>
                 <h2 id="comments">Comments ({post ? post.children : 0})</h2>

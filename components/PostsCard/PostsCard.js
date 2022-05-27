@@ -1,7 +1,6 @@
-
 import {useState, useEffect} from 'react';
 
-import {Accordion, AccordionActions, AccordionDetails, AccordionSummary, Box, Divider} from '@mui/material';
+import {Accordion, AccordionDetails, AccordionSummary, Divider} from '@mui/material';
 
 import Typography from '@mui/material/Typography';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
