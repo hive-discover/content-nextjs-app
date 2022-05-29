@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import {useState, useMemo} from 'react';
+import {useState} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -280,32 +280,27 @@ export default function Layout({children, ...props}) {
             >
               {/* Map all pageLinks into this box when it is a big display */}
               {
-                useMemo(()=>{
-                  if(useSideDrawer) return null;
+                useSideDrawer ? null : (pageLinks.map((value, index) => { 
+                  const open = Boolean(value.menuOpen);
 
-                  
-                  return pageLinks.map((value, index) => { 
-                    const open = Boolean(value.menuOpen);
+                  return (                   
+                    <div key={index}>
+                      <Button
+                        id="demo-customized-button"
+                        aria-controls={open ? 'demo-customized-menu' : undefined}
+                        aria-haspopup="true"
+                        aria-expanded={open ? 'true' : undefined}
+                        disableElevation
+                        onClick={(event) => { if(value.items) value.setMenuOpen(event.currentTarget); else router.push(value.href); }}
+                        endIcon={value.items ? <KeyboardArrowDownIcon /> : value.endIcon}
+                      >
+                        {value.title}
+                      </Button>
 
-                    return (                   
-                      <div key={index}>
-                        <Button
-                          id="demo-customized-button"
-                          aria-controls={open ? 'demo-customized-menu' : undefined}
-                          aria-haspopup="true"
-                          aria-expanded={open ? 'true' : undefined}
-                          disableElevation
-                          onClick={(event) => { if(value.items) value.setMenuOpen(event.currentTarget); else router.push(value.href); }}
-                          endIcon={value.items ? <KeyboardArrowDownIcon /> : value.endIcon}
-                        >
-                          {value.title}
-                        </Button>
-
-                        {addPageLinksNotMobile(value.items, value.menuOpen, value.setMenuOpen)}
-                      </div>
-                    )
-                  });
-                }, [useSideDrawer, pageLinks])
+                      {addPageLinksNotMobile(value.items, value.menuOpen, value.setMenuOpen)}
+                    </div>
+                  )
+                }))
               }
             </Box>          
 
