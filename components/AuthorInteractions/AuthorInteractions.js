@@ -34,9 +34,24 @@ export default function AuthorInteractions({username, selectedTab, session}){
             </Box>   
 
             {/* Tab-Content */}
-            <Box sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                <PostsTab username={username} sort={tabs[mapSelectedTabNameToIndex(selectedTab)]} observer={observer}/>
-            </Box>
+            
+                {
+                    tabs.map((tab, index) => {
+                        const isSelected = selectedTab === tab;
+                        return (
+                            <Box sx={{ width: '100%', bgcolor: 'background.paper', display : (isSelected ? null : "none") }} key={index} >
+                                <PostsTab 
+                                    username={username} 
+                                    sort={tab} 
+                                    observer={observer}       
+                                    isSelected={isSelected}                             
+                                />
+                            </Box>
+                        )
+                    })
+                }
+                {/* <PostsTab username={username} sort={tabs[mapSelectedTabNameToIndex(selectedTab)]} observer={observer}/> */}
+            
         </Box>
     );
 }

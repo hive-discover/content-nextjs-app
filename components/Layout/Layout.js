@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import {useState} from 'react';
+import {useState, useMemo} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -31,7 +31,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Person from '@mui/icons-material/Person';
 
-const LoggedInMenue = dynamic(() => import('./LoggedInMenue'));
+const LoggedInMenue = dynamic(() => import('./LoggedInMenue'), { ssr: false });
 const LoginModal = dynamic(() => import('../LoginModal/LoginModal'));
 const StyledMenu = dynamic(() => import('./StyledMenu'));
 const Footer = dynamic(() => import('./Footer'));
@@ -215,8 +215,6 @@ export default function Layout({children, ...props}) {
 
   // Get Session and maybe Account
   const { data: session } = useSession();
-  console.log("Session:", session);
-
   const [searchQuery, setSearchQuery] = useState('');
 
   // Mobile SideDrawer State
@@ -281,27 +279,34 @@ export default function Layout({children, ...props}) {
               style={{alignContent: 'center'}}
             >
               {/* Map all pageLinks into this box when it is a big display */}
-              {useSideDrawer ? null : pageLinks.map((value, index) => {
-                  const open = Boolean(value.menuOpen);
-                  return (
-                    <div key={index}>
-                      <Button
-                        id="demo-customized-button"
-                        aria-controls={open ? 'demo-customized-menu' : undefined}
-                        aria-haspopup="true"
-                        aria-expanded={open ? 'true' : undefined}
-                        disableElevation
-                        onClick={(event) => { if(value.items) value.setMenuOpen(event.currentTarget); else router.push(value.href); }}
-                        endIcon={value.items ? <KeyboardArrowDownIcon /> : value.endIcon}
-                      >
-                        {value.title}
-                      </Button>
+              {
+                useMemo(()=>{
+                  if(useSideDrawer) return null;
 
-                      {addPageLinksNotMobile(value.items, value.menuOpen, value.setMenuOpen)}
-                    </div>
-                  )
-                }
-              )}
+                  
+                  return pageLinks.map((value, index) => { 
+                    const open = Boolean(value.menuOpen);
+
+                    return (                   
+                      <div key={index}>
+                        <Button
+                          id="demo-customized-button"
+                          aria-controls={open ? 'demo-customized-menu' : undefined}
+                          aria-haspopup="true"
+                          aria-expanded={open ? 'true' : undefined}
+                          disableElevation
+                          onClick={(event) => { if(value.items) value.setMenuOpen(event.currentTarget); else router.push(value.href); }}
+                          endIcon={value.items ? <KeyboardArrowDownIcon /> : value.endIcon}
+                        >
+                          {value.title}
+                        </Button>
+
+                        {addPageLinksNotMobile(value.items, value.menuOpen, value.setMenuOpen)}
+                      </div>
+                    )
+                  });
+                }, [useSideDrawer, pageLinks])
+              }
             </Box>          
 
             <Search>

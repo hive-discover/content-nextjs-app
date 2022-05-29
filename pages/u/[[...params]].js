@@ -14,6 +14,7 @@ import CardActions from '@mui/material/CardActions'
 import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress';
 
+import useAccount from '../../lib/hooks/hive/useAccount';
 import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard'
 const AuthorInteractions = dynamic(() => import('../../components/AuthorInteractions/AuthorInteractions'), {ssr: false, loading: () => <CircularProgress sx={{m : 5}}/>});
 
@@ -43,18 +44,19 @@ export default function User(props){
 
     const { data: session } = useSession()
     const { updateScroll } = useRouterScroll();
-    const {data: account, error: accountError} = useSWR(`/api/getAccount/${username || "unkown"}`, (url)=> fetch(url).then(res => res.json()));
+    const {data : account, pending : accountPending, error : accountError} = useAccount({username});
     const {data : relation, error : relationError} = useSWR(`/api/getRelationship/${session ? session.user.name : "u"}/${username}`, (url)=> fetch(url).then(res => res.json()));
 
-    if(accountError || (account && account.error))
-        return AccountNotFound();
-
-    const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};    
+    const profile = (account?.posting_json_metadata && account.posting_json_metadata?.profile) ? account.posting_json_metadata.profile : {};    
     
     useEffect(() => {
-        if(profile)
+        if(profile && !accountPending)
             updateScroll();
-    }, [profile]);
+    }, [profile, accountPending]);
+
+    console.log(accountError, account);
+    if(accountError)
+        return AccountNotFound();
 
     return (
         <Container>

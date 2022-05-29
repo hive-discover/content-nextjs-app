@@ -58,6 +58,32 @@ const parsePostBody = async (body, setBody) => {
     setBody(parse(body));
 }
 
+const initTrackingAuth = async(session, setTrackingAuth)=>{
+    if(!session) return;
+
+    if(session.provider === "hivesigner"){
+        setTrackingAuth({access_token : session.accessToken});
+    }
+
+    if(session.provider === "keychain"){
+        const keychain = await import('@hiveio/keychain').then(m=>m.keychain);
+        const {success, msg} = await keychain(
+            window,
+            'requestEncodeMessage',
+            session.user.name, 
+            'action-chain',
+            '#' + session.user.name,
+            'Posting'
+        );
+
+        if(success)
+            setTrackingAuth({ keychain_signed_msg: msg })
+    }
+
+}
+
+
+
 export default function ShowPost(props){
     const router = useRouter();
     let {category, author, permlink} = router.query;
@@ -83,30 +109,56 @@ export default function ShowPost(props){
         }
     }, [post])
 
+    const [lastTracking, setLastTracking] = useState({}); // event_name : timestamp
+    const [trackingAuth, setTrackingAuth] = useState(null);
+
     // Account-Tracking with Events
     // * Tracking Function
+    useEffect(()=>{
+        if(session && !trackingAuth)
+            initTrackingAuth(session, setTrackingAuth);
+    }, [session, trackingAuth])
     const trackEvents = async (EVENT_NAME) => {
-        //alert(EVENT_NAME);
+        
+        if(lastTracking[EVENT_NAME] && (Date.now() - lastTracking[EVENT_NAME]) < 1000*15) return; // 15 seconds delay
+    
+        // Set Tracking and send event
+        setLastTracking({...lastTracking, [EVENT_NAME] : Date.now()});
+              
+        const body = {
+            activity_type : EVENT_NAME,
+            metadata : {author, permlink},
+            username : session.user.name,
+            ...trackingAuth
+        }
+        fetch(
+            "https://api.hive-discover.tech/v1/activities/add", 
+            { method : "POST", body : JSON.stringify(body), headers : {'Content-Type' : 'application/json'}}
+        ); 
     }
     //  * Opened the Post
     useEffect(()=>{
-        if(post?.permlink && post?.author && session)
+        if(post?.permlink && post?.author && trackingAuth)
             trackEvents("post_opened"); // Only once
-    }, [post, session]);
+    }, [post, trackingAuth]);
     //  * Post read completely
     const postEndRef = useRef();
     const postEndInViewport = useIntersection(postEndRef, '0px');
     useEffect(()=>{
-        if(postEndInViewport && !isLoading && session)
+        if(postEndInViewport && !isLoading && trackingAuth)
             trackEvents("post_full_read"); // Only once
-    }, [postEndInViewport, isLoading, session]);
+    }, [postEndInViewport, isLoading, trackingAuth, lastTracking]);
     //  * onScroll to determine time user spent on post
-    const handleScroll = ()=>{trackEvents("post_scroll")};
+    const [hasScrolled, setHasScrolled] = useState(false);
+    const handleScroll = ()=>{setHasScrolled(Math.random());};
     useEffect(() => {
-        if(!session) return;
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     });
+    useEffect(()=>{
+        if(!hasScrolled || !trackingAuth) return;
+        trackEvents("post_scrolled").then(()=>{setHasScrolled(false);}); // Only once per fetched     
+    }, [hasScrolled, trackingAuth, lastTracking]);
     
 
     // Do scroll restoration
@@ -137,7 +189,7 @@ export default function ShowPost(props){
                         <br/>
                         {postBody ? postBody : getTextLoader() }
                         <br/>
-                        <Divider variant="middle" orientation='horizontal' />
+                        <Divider variant="middle" orientation='horizontal' sx={{mt : "auto"}} />
                         {getTags(post ? post.json_metadata.tags : null)}
                     </Paper>
                 </Grid>

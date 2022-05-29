@@ -84,6 +84,8 @@ export default function RowPostcard({ post, author, permlink, highlight}){
 
     if(postLoading)
         return <RowPostCardLoading />
+    if(postError)
+        return null; // Just skip this post
 
     return (
         <Grid container sx={{mt : {xs : 3, sm : 0, md : 3}, mb : {xs : 3, sm : 0, md : 3}}}>
