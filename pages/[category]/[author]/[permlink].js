@@ -1,5 +1,6 @@
 import {useRouter} from 'next/router';
 import useSWR from 'swr';
+import useSWRImmutable from 'swr/immutable'
 import dynamic from 'next/dynamic'
 import getDate from '../../../lib/niceTimestamp';
 import Link from 'next/link';
@@ -109,64 +110,54 @@ export default function ShowPost(props){
         }
     }, [post])
 
-    const [lastTracking, setLastTracking] = useState({}); // event_name : timestamp
-    const [trackingAuth, setTrackingAuth] = useState(null);
+    useEffect(()=>{
+        if(!isLoading)
+            updateScroll();
+    }, [isLoading])
 
-    // Account-Tracking with Events
-    // * Tracking Function
+    // Prepare Tracking Auth
+    const [trackingAuth, setTrackingAuth] = useState(null);
     useEffect(()=>{
         if(session && !trackingAuth)
             initTrackingAuth(session, setTrackingAuth);
     }, [session, trackingAuth])
-    const trackEvents = async (EVENT_NAME) => {
-        
-        if(lastTracking[EVENT_NAME] && (Date.now() - lastTracking[EVENT_NAME]) < 1000*15) return; // 15 seconds delay
-    
-        // Set Tracking and send event
-        setLastTracking({...lastTracking, [EVENT_NAME] : Date.now()});
-              
-        const body = {
-            activity_type : EVENT_NAME,
-            metadata : {author, permlink},
-            username : session.user.name,
-            ...trackingAuth
-        }
-        fetch(
+
+    const tracking_meta = {
+        metadata : {author, permlink},
+        username : session?.user.name,
+        ...trackingAuth
+    };
+
+    // Tracking Account's events
+    // * 1. PostOpened
+    const {} = useSWRImmutable(
+        trackingAuth ? `post-opened: '@${author}/${permlink}'` : null, 
+        () => fetch(
             "https://api.hive-discover.tech/v1/activities/add", 
-            { method : "POST", body : JSON.stringify(body), headers : {'Content-Type' : 'application/json'}}
-        ); 
-    }
-    //  * Opened the Post
-    useEffect(()=>{
-        if(post?.permlink && post?.author && trackingAuth)
-            trackEvents("post_opened"); // Only once
-    }, [post, trackingAuth]);
-    //  * Post read completely
+            { method : "POST", body : JSON.stringify({...tracking_meta, activity_type : "post_opened"}), headers : {'Content-Type' : 'application/json'}}
+        )
+    );
+    // * 2. PostScroll (just fire it every 3 seconds when the page is in focus - SWR will take care of the rest)
+    const {} = useSWR(
+        trackingAuth ? `post-scroll: '@${author}/${permlink}'` : null,
+        () => fetch(
+            "https://api.hive-discover.tech/v1/activities/add",
+            { method : "POST", body : JSON.stringify({...tracking_meta, activity_type : "post_scrolled"}), headers : {'Content-Type' : 'application/json'}}
+        ),
+        {
+            refreshInterval : 3000,
+        }
+    );
+    // * 3. PostFullRead
     const postEndRef = useRef();
     const postEndInViewport = useIntersection(postEndRef, '0px');
-    useEffect(()=>{
-        if(postEndInViewport && !isLoading && trackingAuth)
-            trackEvents("post_full_read"); // Only once
-    }, [postEndInViewport, isLoading, trackingAuth, lastTracking]);
-    //  * onScroll to determine time user spent on post
-    const [hasScrolled, setHasScrolled] = useState(false);
-    const handleScroll = ()=>{setHasScrolled(Math.random());};
-    useEffect(() => {
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    });
-    useEffect(()=>{
-        if(!hasScrolled || !trackingAuth) return;
-        trackEvents("post_scrolled").then(()=>{setHasScrolled(false);}); // Only once per fetched     
-    }, [hasScrolled, trackingAuth, lastTracking]);
-    
-
-    // Do scroll restoration
-    useEffect(()=>{
-        if(post && postBody){
-            updateScroll();
-        }
-    }, [post, postBody]);
+    const {} = useSWRImmutable(
+        postEndInViewport && !isLoading ? `post-full-read: '@${author}/${permlink}'` : null,
+        () => fetch(
+            "https://api.hive-discover.tech/v1/activities/add",
+            { method : "POST", body : JSON.stringify({...tracking_meta, activity_type : "post_full_read"}), headers : {'Content-Type' : 'application/json'}}
+        )
+    );
 
     return (
         <Container>
@@ -201,13 +192,13 @@ export default function ShowPost(props){
                     <PostsCard title={`Similar Content by @${author}`} posts={similarPostsByAuthor ? similarPostsByAuthor.posts : null} />
                     {
                         publishedInCommunity 
-                        ? [<br/>,<PostsCard title={`More from ${community.title}`} posts={similarPostsByCommunity ? similarPostsByCommunity.posts : null} />]
+                        ? <><br/><PostsCard title={`More from ${community.title}`} posts={similarPostsByCommunity ? similarPostsByCommunity.posts : null} /></>
                         : null
                     }
                     {/* Similar by Tag */}
                     {
                         post && post.json_metadata.tags.length >= 1
-                        ? [<br/>,<PostsCard title={`Also tagged with #${post.json_metadata.tags[0]}`} posts={similarPostsByTag ? similarPostsByTag.posts : null} />]
+                        ? <><br/><PostsCard title={`Also tagged with #${post.json_metadata.tags[0]}`} posts={similarPostsByTag ? similarPostsByTag.posts : null} /></>
                         : null
                     }
                     <br/>
