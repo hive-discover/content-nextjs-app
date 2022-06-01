@@ -174,7 +174,7 @@ export default function ShowPost(props){
 
             <Grid container spacing={2} sx={{mt : 1, mb : 1}} alignItems="stretch">
                 <Grid item sm={12} md={8}>
-                    <Paper elevation={2} sx={{p : 5, height : "100%"}} id="post-body">
+                    <Paper elevation={2} sx={{p : 5, height : "100%", overflowX : "hidden"}} id="post-body">
                         <p>{getDate(post ? post.created : null, "Published ")}</p>
                         <CommunityCard name={post ? post.category : null}/>                     
                         <br/>

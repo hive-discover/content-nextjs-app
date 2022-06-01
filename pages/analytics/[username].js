@@ -60,11 +60,46 @@ export default function Analytics(props){
 
     return (
         <Container>
-            <h1>Analytics <small>- show top 25 most interesting posts you saw</small></h1>
+            <h1>Analytics <small>- top 25 most interesting posts you read</small></h1>
+
             <Divider />
+
+            <Grid container spacing={3} textAlign="center">
+                <Grid item xs={12} md={4}>
+                    <Typography variant="h6">
+                        Total Time Spent
+                        <br/>
+                        {
+                            activityData?.status === "ok" ? activityData.result.user_avg.total_sum * 3 + " secs" : "..."
+                        }
+                    </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <Typography variant="h6">
+                        Total Posts Viewed
+                        <br/>
+                        {
+                            activityData?.status === "ok" ? activityData.result.user_avg.hits : "..."
+                        }
+                    </Typography>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                    <Typography variant="h6">
+                        Average Time Per Post
+                        <br/>
+                        {
+                            activityData?.status === "ok" ? Math.floor(activityData.result.user_avg.avg * 100) * 0.03 + " secs/post" : "..."
+                        }
+                    </Typography>
+                </Grid>
+
+            </Grid>
+
+            <Divider />
+
             <Grid container spacing={2}>
                 {
-                    activityData?.status === "ok" ? activityData.result.map(({author, permlink, score}, i) => {
+                    activityData?.status === "ok" ? activityData.result.post_scores.map(({author, permlink, score}, i) => {
                         return (
                             <Grid item key={i} xs={12}>
                                 <Grid container spacing={2}>
