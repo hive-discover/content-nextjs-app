@@ -37,7 +37,7 @@ const loader = ()=>{
     )
 }
 
-export default function Item({author, permlink, post}){
+export default function Item({author, permlink, post, clickThroughMetadata}){
     post = {author, permlink, ...post}; // ensure author and permlink are set
 
     const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);

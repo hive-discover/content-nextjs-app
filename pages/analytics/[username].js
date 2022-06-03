@@ -70,7 +70,7 @@ export default function Analytics(props){
                         Total Time Spent
                         <br/>
                         {
-                            activityData?.status === "ok" ? activityData.result.user_avg.total_sum * 3 + " secs" : "..."
+                            activityData?.status === "ok" ? activityData.result.user_avg.total * 3 + " secs" : "..."
                         }
                     </Typography>
                 </Grid>
@@ -79,7 +79,7 @@ export default function Analytics(props){
                         Total Posts Viewed
                         <br/>
                         {
-                            activityData?.status === "ok" ? activityData.result.user_avg.hits : "..."
+                            activityData?.status === "ok" ? activityData.result.user_avg.posts : "..."
                         }
                     </Typography>
                 </Grid>
@@ -88,7 +88,7 @@ export default function Analytics(props){
                         Average Time Per Post
                         <br/>
                         {
-                            activityData?.status === "ok" ? Math.floor(activityData.result.user_avg.avg * 100) * 0.03 + " secs/post" : "..."
+                            activityData?.status === "ok" ? Math.floor(activityData.result.user_avg.avg * 30) / 10 + " secs/post" : "..."
                         }
                     </Typography>
                 </Grid>

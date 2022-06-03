@@ -159,6 +159,11 @@ export default function ShowPost(props){
         )
     );
 
+    const clickThroughMetadata = {
+        origin_author : author,
+        origin_permlink : permlink
+    }
+
     return (
         <Container>
             {post ? 
@@ -188,17 +193,21 @@ export default function ShowPost(props){
                     {/* More by this author */}
                     <ProfileColumnCard username={author} clickable={true}/>          
                     <br/>
+                    <PostsCard 
+                        title={`Similar Content by @${author}`} 
+                        posts={similarPostsByAuthor ? similarPostsByAuthor.posts : null} 
+                        clickThroughMetadata={{origin_type : "post_view_similar_by_author", ...clickThroughMetadata}}
+                    />
                     {/* Similar in Community  */}
-                    <PostsCard title={`Similar Content by @${author}`} posts={similarPostsByAuthor ? similarPostsByAuthor.posts : null} />
                     {
                         publishedInCommunity 
-                        ? <><br/><PostsCard title={`More from ${community.title}`} posts={similarPostsByCommunity ? similarPostsByCommunity.posts : null} /></>
+                        ? <><br/><PostsCard title={`More from ${community.title}`} posts={similarPostsByCommunity ? similarPostsByCommunity.posts : null} clickThroughMetadata={{origin_type : "post_view_similar_in_community", ...clickThroughMetadata}}/></>
                         : null
                     }
                     {/* Similar by Tag */}
                     {
                         post && post.json_metadata.tags.length >= 1
-                        ? <><br/><PostsCard title={`Also tagged with #${post.json_metadata.tags[0]}`} posts={similarPostsByTag ? similarPostsByTag.posts : null} /></>
+                        ? <><br/><PostsCard title={`Also tagged with #${post.json_metadata.tags[0]}`} posts={similarPostsByTag ? similarPostsByTag.posts : null} clickThroughMetadata={{origin_type : "post_view_similar_by_tags", ...clickThroughMetadata}}/></>
                         : null
                     }
                     <br/>

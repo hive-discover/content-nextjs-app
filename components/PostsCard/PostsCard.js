@@ -7,7 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import Item from './Item';
 
-export default function PostRow({title, posts}){
+export default function PostRow({title, posts, clickThroughMetadata = null}){
     const [expanded, setExpanded] = useState(false);
 
     if(!posts || posts.length === 0) // No Posts Found
@@ -24,7 +24,7 @@ export default function PostRow({title, posts}){
             </AccordionSummary>
             <AccordionDetails sx={{mt : 0}}><Typography>
                 {
-                    posts.map((p, index) => [<Divider key={"divider-" + index} variant="middle" />, <Item key={"item-" + index} author={p.author} permlink={p.permlink}/>])
+                    posts.map((p, index) => [<Divider key={"divider-" + index} variant="middle" />, <Item key={"item-" + index} author={p.author} permlink={p.permlink} clickThroughMetadata={clickThroughMetadata}/>])
                 }
             </Typography></AccordionDetails>
         </Accordion>
