@@ -1,18 +1,21 @@
 import Link from 'next/link';
 import {useState} from 'react';
-import { signOut } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import dynamic from 'next/dynamic'
 
+import {sessionHasPostingPermission} from '../../lib/backendAuth'
 import {Avatar, Button, Divider, MenuItem} from '@mui/material';
 
 const StyledMenu = dynamic(() => import('./StyledMenu'));
 
-export default function LoggedInMenue({session}) {
+export default function LoggedInMenue({session, setLoginModalOpen}) {
     // Profile Menue State
     const [profileMenueOpen, setProfileMenuOpen] = useState(false);
     const handleProfileMenueClose = () => {
         setProfileMenuOpen(false);
     };
+
+    
 
     return (
         <div>
@@ -51,6 +54,13 @@ export default function LoggedInMenue({session}) {
                     </MenuItem>
                 </Link>
                 <Divider />
+                {
+                    sessionHasPostingPermission(session) === false
+                    ? <MenuItem onClick={handleProfileMenueClose}>
+                        <Button onClick={() => setLoginModalOpen(true)}>Add Posting Permission</Button>
+                      </MenuItem> 
+                    : null
+                }
                 <MenuItem onClick={handleProfileMenueClose}>
                     <Button onClick={() => signOut()}>Logout</Button>
                 </MenuItem>                   

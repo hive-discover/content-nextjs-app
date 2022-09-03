@@ -1,5 +1,5 @@
 import Link from 'next/link';
-
+import {useMemo} from 'react';
 import {CardActionArea, Grid, Typography} from '@mui/material'
 
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -51,6 +51,9 @@ export default function PhotoPostCard({post, author, permlink}){
     post = {author, permlink, ...post}; // ensure author and permlink are set
 
     const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);
+    const postStats = useMemo(()=>(<PostStats post={newestPost} showTimestamp={true}/>), [newestPost]);
+    const imageCarousel = useMemo(()=>(setImageCaroussel(newestPost?.json_metadata, newestPost?.url)), [newestPost]);
+    
     if(postLoading)
         return <PhotoPostCardLoading />  // pending
     if(postError)
@@ -75,10 +78,8 @@ export default function PhotoPostCard({post, author, permlink}){
                 </CardActionArea>
             </Link>        
             
-            {setImageCaroussel(newestPost.json_metadata, newestPost.url)}
-            
-
-            <PostStats post={newestPost} showTimestamp={true}/>
+            {imageCarousel}    
+            {postStats}            
         </Grid>
     )
 }

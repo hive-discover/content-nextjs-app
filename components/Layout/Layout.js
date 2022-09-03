@@ -322,7 +322,7 @@ export default function Layout({children, ...props}) {
 
             <Box style={{alignContent: 'center'}}>
               {session
-                ? <LoggedInMenue session={session} />
+                ? <LoggedInMenue session={session} setLoginModalOpen={setLoginModalOpen} />
               : (
                 <Button
                   onClick={() => setLoginModalOpen(!loginModalOpen)}
