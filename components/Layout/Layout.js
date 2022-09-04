@@ -214,15 +214,15 @@ const getPreloads = (session)=>{
     return null;
 
   return (<Head>
-    <link rel="preload" href="/explore" as="fetch" crossorigin></link>
+    <link rel="preload" href="/explore" as="fetch"></link>
 
-    <link rel="preload" href="/explore/all" as="fetch" crossorigin></link>
-    <link rel="preload" href="/explore/tags" as="fetch" crossorigin></link>
-    <link rel="preload" href="/explore/communities" as="fetch" crossorigin></link>
+    <link rel="preload" href="/explore/all" as="fetch"></link>
+    <link rel="preload" href="/explore/tags" as="fetch"></link>
+    <link rel="preload" href="/explore/communities" as="fetch"></link>
 
-    <link rel="preload" href="/explore/trending" as="fetch" crossorigin></link>
-    <link rel="preload" href="/explore/hot" as="fetch" crossorigin></link>
-    <link rel="preload" href="/explore/new" as="fetch" crossorigin></link>
+    <link rel="preload" href="/explore/trending" as="fetch"></link>
+    <link rel="preload" href="/explore/hot" as="fetch"></link>
+    <link rel="preload" href="/explore/new" as="fetch"></link>
   </Head>);
 }
 
