@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { signIn, useSession } from "next-auth/react"
 import {keychain} from '@hiveio/keychain'
+import {Notify} from 'notiflix/build/notiflix-notify-aio'
 
 import Button from '@mui/material/Button';
 import Grid  from '@mui/material/Grid';
@@ -20,15 +21,20 @@ export default function({setIsOpen, setStepNumber}){
     const [isLoading, setIsLoading] = useState(false);
     const [keychainError, setKeychainError] = useState("");
 
-    const {name : username, privateMemoKey} = session.user;
+    let {name : username, privateMemoKey, deviceKey} = session?.user;
 
     if(sessionHasPostingPermission(session)){
         // Logged completely in
+        Notify.success(`Added Posting Permissions for: ` + username, {timeout: 5000, position : "right-bottom", clickToClose : true, passOnHover : true});
         setIsOpen(false);
         return <></>
     }
 
     const onClick_SignInKeychain = async () => {
+        // Reset deviceKey on failure
+        if(keychainError)
+            deviceKey = null;
+
         setIsLoading(true);
         setKeychainError("");
     
@@ -57,16 +63,15 @@ export default function({setIsOpen, setStepNumber}){
     
         // Successfully encoded message ==> signIn
         const encodedMsg = msg;
-        const result = await signIn("keychain", {username, privateMemoKey, encodedMsg, redirect : false});
+        const result = await signIn("keychain", {username, privateMemoKey, encodedMsg, deviceKey, redirect : false});
         if(result.error){
             setIsLoading(false);
             setKeychainError(result.error);
             return;
         }
 
-        // Successfully signed in
-        setIsOpen(false);
-        setIsLoading(false);
+        // Successfully logged in
+        setIsOpen(false)
     };
 
     const onClick_SignInHiveSigner = () => {

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react'; 
 
 import { signIn } from "next-auth/react"
+import {Notify} from 'notiflix/build/notiflix-notify-aio'
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -26,13 +27,18 @@ export default function ({username, setUsername, privateMemoKey, setPrivateMemoK
     }    
 
     const onClick_Next = async () => {
+        // Reset deviceKey on failure
+        let deviceKey = session?.user?.deviceKey;
+        if(authError)
+            deviceKey = null;
 
         // Reset form errors / loading
         setIsLoading(true);
         setAuthError("");
 
         // Sign in with simple-account
-        const result = await signIn("simple-account", {username, privateMemoKey, redirect : false});
+        
+        const result = await signIn("simple-account", {username, privateMemoKey, deviceKey, redirect : false});
         if(result.error){
             setIsLoading(false);
             setAuthError(result.error);
@@ -41,6 +47,7 @@ export default function ({username, setUsername, privateMemoKey, setPrivateMemoK
 
         // Successfully signed in
         setStepNumber(2);
+        Notify.success(`Added Account @${username} without posting permissions. Voting and commenting is disabled. Change it now...`, {timeout: 5000, position : "right-bottom", clickToClose : true, passOnHover : true});
         setIsLoading(false);
     }
 

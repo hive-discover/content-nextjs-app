@@ -2,11 +2,11 @@ import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials";
 
 import hivecrypt from "hivecrypt";
-import { verifyPrivateKey } from '../../../lib/backendAuth';
+import { verifyPrivateKey, verfiyDeviceKey } from '../../../lib/backendAuth';
 
-const backendMinCredentials = {username : "", privateMemoKey : ""};
+const backendMinCredentials = {username : "", privateMemoKey : "", deviceKey : ""};
 const backendAuthorize = async (credentials, req) => {
-    const {username, privateMemoKey} = credentials;
+    const {username, privateMemoKey, deviceKey : prevSessionDeviceKey} = credentials;
 
     // Validate the credentials
     if(username.length < 3)
@@ -19,21 +19,27 @@ const backendAuthorize = async (credentials, req) => {
     // Form Input is valid, verify private memo key                
     if(await verifyPrivateKey(username, privateMemoKey) === false)
         return Promise.reject(new Error(`Private Memo Key could not be verified togehter with '${username}'`));
-    
-    // Register device at backend API
-    const deviceName = `${req.headers['user-agent']}-${Math.floor(Math.random() * 1000000)}`;
-    const deviceRegistration = await fetch(`https://api.hive-discover.tech/accounts/register-device?username=${username}&deviceName=${deviceName}`, {method : "GET"}).then(res => res.json()).catch(() => {return Promise.reject(new Error("Could not register device at backend API"))});
-    if(deviceRegistration?.status !== "ok")
-        return Promise.reject(new Error(`Device could not be registered at backend API`));
 
     // Decode the device key from our API
-    let deviceKey = null;
-    try{
-        const decoded_msg = hivecrypt.decode(privateMemoKey, deviceRegistration.msg_encoded);
-        deviceKey = JSON.parse(decoded_msg.slice(1)).deviceKey;
-    }catch(e){
-        return Promise.reject(new Error(`Could not decode device key from backend API`));
-    }
+    let deviceKey = prevSessionDeviceKey;
+    if(!deviceKey || deviceKey.length < 10){
+        // Register device at backend API
+        const deviceName = `${req.headers['user-agent']}.${Math.floor(Math.random() * 1000000)}`;
+        const deviceRegistration = await fetch(`https://api.hive-discover.tech/accounts/register-device?username=${username}&deviceName=${deviceName}`, {method : "GET"}).then(res => res.json()).catch(() => {return Promise.reject(new Error("Could not register device at backend API"))});
+        if(deviceRegistration?.status !== "ok")
+            return Promise.reject(new Error(`Device could not be registered at backend API`));
+
+        try{
+            const decoded_msg = hivecrypt.decode(privateMemoKey, deviceRegistration.msg_encoded);
+            deviceKey = JSON.parse(decoded_msg.slice(1)).deviceKey;
+        }catch(e){
+            return Promise.reject(new Error(`Could not decode device key from backend API`));
+        }
+    } 
+
+    // Verify device key at backend API
+    if(await verfiyDeviceKey({user : {deviceKey, name : username, privateMemoKey}}) === false)
+        return Promise.reject(new Error(`Device key could not be verified at backend API`));
 
     // Successfully verified private memo key
     return {name : username, privateMemoKey, deviceKey};
@@ -131,9 +137,8 @@ export default NextAuth({
 
         async session({session, token, user}) {
             // Set privateMemoKey and provider into every session   
-            session.accessToken = token.accessToken
             session.provider = token.provider;
-            session.deviceKey = token.deviceKey;
+            session.user.deviceKey = token.deviceKey;
             session.user.privateMemoKey = token.privateMemoKey;
             session.user.accessToken = token.accessToken;
 

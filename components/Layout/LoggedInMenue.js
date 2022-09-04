@@ -18,7 +18,7 @@ export default function LoggedInMenue({session, setLoginModalOpen}) {
     
 
     return (
-        <div>
+        <>
             <Button
                 id="avatar-dropdown-button"
                 aria-controls={Boolean(profileMenueOpen) ? 'avatar-dropdown-menu' : undefined}
@@ -65,6 +65,6 @@ export default function LoggedInMenue({session, setLoginModalOpen}) {
                     <Button onClick={() => signOut()}>Logout</Button>
                 </MenuItem>                   
             </StyledMenu>
-        </div>
+        </>
     )
 }

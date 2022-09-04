@@ -1,18 +1,14 @@
-import { useSession } from 'next-auth/react'
-import useSWR from 'swr'
 import Link from 'next/link'
 
 import Container from '@mui/material/Container'
 import Button from '@mui/material/Button'
 
 export default function explore(props){
-    
-    const {data : session} = useSession()
 
     return (
         <Container>
-            
             <h1>Explore</h1>
+
             <p>
                 LOGIN Show recommendation from anywhere
                 <small>
@@ -37,16 +33,6 @@ export default function explore(props){
                 LOGIN Show recommendations by tags
                 <small>
                     <Link href="/explore/tags">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-            LOGIN Show Normal Feed
-                <small>
-                    <Link href="/explore/feed">
                         <Button>
                             View More
                         </Button>

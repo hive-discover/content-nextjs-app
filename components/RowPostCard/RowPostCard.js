@@ -2,6 +2,7 @@ import Link from 'next/link';
 import useSWR from 'swr';
 import {useState, useEffect} from 'react';
 import dynamic from 'next/dynamic';
+import { useRef } from 'react';
 
 import Image from 'next/image';
 
@@ -15,6 +16,7 @@ import PostStats from '../../components/PostStats/PostStats';
 
 import myLoader from '../../lib/imageHosterLoader';
 import useHivePost from '../../lib/hooks/hive/useHivePost';
+import useIntersection from '../../lib/hooks/useIntersection'
 
 const getThumbnailImage = (metadata, thumbnailErrors) => {
     const theme = useTheme();
@@ -60,7 +62,7 @@ const doHighlighting = async (highlight, setTitle, setBody) => {
 }
 
 
-export default function RowPostcard({ post, author, permlink, highlight}){    
+export default function RowPostcard({ post, author, permlink, highlight, onInViewpoint}){    
     post = {author, permlink, ...post}; // ensure author and permlink are set
 
     // Set hooks 
@@ -68,6 +70,16 @@ export default function RowPostcard({ post, author, permlink, highlight}){
     const [thumbnailErrors, setThumbnailErrors] = useState(0);
     const [title, setTitle] = useState(newestPost?.title);
     const [body, setBody] = useState(newestPost?.json_metadata?.description);
+
+    // Fire on in viewpoint event
+    const bodyRef = useRef(null);
+    if(onInViewpoint){
+        const bodyInViewport = useIntersection(bodyRef, '-200px');
+        useEffect(()=>{
+            if(bodyInViewport && body)
+                onInViewpoint(post);
+        },[bodyInViewport, body]);
+    }
 
     // Parse highlight OR use post metadata
     useEffect(() => {
@@ -106,7 +118,7 @@ export default function RowPostcard({ post, author, permlink, highlight}){
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
-                <CardContent sx={{width : "100%"}}>     
+                <CardContent sx={{width : "100%"}} ref={bodyRef}>     
                     <Link href={newestPost.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               

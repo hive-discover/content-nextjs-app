@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSession } from "next-auth/react"
 import { useMediaQuery } from '@mui/material';
 import dynamic from 'next/dynamic'
+import Head from 'next/head';
 
 import { styled, alpha, useTheme } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
@@ -208,6 +209,23 @@ const onClickGoSearch = (e, router, search_query) => {
 
 const drawerWidth = 350;
 
+const getPreloads = (session)=>{
+  if(!session)
+    return null;
+
+  return (<Head>
+    <link rel="preload" href="/explore" as="fetch" crossorigin="anonymous"></link>
+
+    <link rel="preload" href="/explore/all" as="fetch" crossorigin="anonymous"></link>
+    <link rel="preload" href="/explore/tags" as="fetch" crossorigin="anonymous"></link>
+    <link rel="preload" href="/explore/communities" as="fetch" crossorigin="anonymous"></link>
+
+    <link rel="preload" href="/explore/trending" as="fetch" crossorigin="anonymous"></link>
+    <link rel="preload" href="/explore/hot" as="fetch" crossorigin="anonymous"></link>
+    <link rel="preload" href="/explore/new" as="fetch" crossorigin="anonymous"></link>
+  </Head>);
+}
+
 export default function Layout({children, ...props}) {
   const router = useRouter();
   const theme = useTheme();
@@ -230,7 +248,9 @@ export default function Layout({children, ...props}) {
   const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   return (
-    <div>
+    <>
+      {getPreloads(session)}
+
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar>
@@ -375,6 +395,6 @@ export default function Layout({children, ...props}) {
 
       {/* Add the Footer */}
       <Footer />
-    </div>
+    </>
   );
 }

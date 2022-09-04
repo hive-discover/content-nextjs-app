@@ -13,48 +13,25 @@ import SouthEast from '@mui/icons-material/SouthEast'
 import South from '@mui/icons-material/South'
 
 import {CircularProgress, Container, Divider, Grid, Typography} from '@mui/material';
+
+import {getDeviceKeyEncodedMessage} from '../../lib/backendAuth';
+
+
 const RowPostCard = dynamic(() => import('../../components/RowPostCard/RowPostCard'), {ssr: false, loading: () => <center><CircularProgress /></center>});
 
-const initActivityAuth = async(session, setTrackingAuth)=>{
-    if(!session) return;
 
-    if(session.provider === "hivesigner"){
-        setTrackingAuth("access_token=" + session.accessToken);
-    }
-
-    if(session.provider === "keychain"){
-        const keychain = await import('@hiveio/keychain').then(m=>m.keychain);
-        const {success, msg} = await keychain(
-            window,
-            'requestEncodeMessage',
-            session.user.name, 
-            'action-chain',
-            '#' + session.user.name,
-            'Posting'
-        );
-
-        if(success){
-            setTrackingAuth("keychain_signed_msg=" + encodeURIComponent(msg));
-        }
-    }
-
-}
 
 export default function Analytics(props){
     const router = useRouter()
 
     const {username} = router.query;
     const { data: session } = useSession();
-
-    // Prepare Tracking Auth
-    const [activityAuth, setActivityAuth] = useState(null);
-    useEffect(()=>{
-        if(session && !activityAuth)
-            initActivityAuth(session, setActivityAuth);
-    }, [session, activityAuth])
+    const {data : msg_encoded} = useSWRImmutable(session, getDeviceKeyEncodedMessage);
+    
+    const {privateMemoKey} = session?.user || {};
 
     const {data : activityData, error : activityError} = useSWR(
-        activityAuth && username ? `https://api.hive-discover.tech/v1/activities/view?amount=25&username=${username.replace("@", "")}&${activityAuth}` : null, 
+        msg_encoded ? `https://api.hive-discover.tech/v1/activities/view?amount=25&username=${username.replace("@", "")}&msg_encoded=${msg_encoded}&private_memo_key=${privateMemoKey}` : null, 
         (url)=> fetch(url).then(res => res.json())
     );
 
