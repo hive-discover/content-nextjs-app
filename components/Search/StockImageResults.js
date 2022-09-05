@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import useSWRImmutable from 'swr/immutable'
 import Link from 'next/link'
 
@@ -6,62 +6,71 @@ import { Button, Box, Pagination, Typography } from '@mui/material';
 
 import PhotoPostsContainer from "../PhotoPostsContainer/PhotoPostsContainer";
 
-const fetchSearch = ({searchBody}) => fetch(
-        `https://api.hive-discover.tech/v1/images/text`, 
-        {method : "POST", body : JSON.stringify(searchBody), headers : {'Content-Type' : 'application/json'}}
-    ).then(res => res.json());
+import {onClickGo, fetchSearch} from '../../lib/search';
 
-const amountPerPage = 15;
 
-export default function StockImageResults({search_query, visiblePostsCount}){
+export default function StockImageResults({query, options, visiblePostsCount, amountPerPage = 25}){
     const [pageNumber, setPageNumber] = useState(1);
 
-    // Build search body and run search
-    const searchBody = {...search_query, amount : visiblePostsCount ? visiblePostsCount : amountPerPage, page_number : pageNumber};
-    const {data : searchResult, error : searchError} = useSWRImmutable({searchBody, pageNumber}, fetchSearch);
-    const isLoading = !searchResult && searchError !== null;
+    const searchBody = {query : query, ...options, amount : visiblePostsCount ? visiblePostsCount : amountPerPage, highlight : true, page_number : pageNumber, type : "stock"};
+    const {data : searchResults, error : searchError} = useSWRImmutable(searchBody, fetchSearch("/images/text"));
+    const isLoading = !searchResults && !searchError;
 
-    const matched_docs = searchResult?.total || -1;
-    const showPagination = matched_docs > amountPerPage && !isLoading && !visiblePostsCount
+    const matched_docs = (searchResults && searchResults?.total > 0) ? searchResults.total : -1;
+    const showPagination = matched_docs > amountPerPage && !isLoading && !visiblePostsCount;
+
+    const paginationContainer = useMemo(()=>{
+        if(!showPagination)
+            return null;
+
+        return <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
+                   <Pagination 
+                        count={Math.ceil(matched_docs / amountPerPage)} 
+                        showFirstButton 
+                        variant="outlined" 
+                        shape="rounded" 
+                        size="large"
+                        page={pageNumber}
+                        id="top-post-navigation"
+                        onChange={(event, value)=>{setPageNumber(value);}}
+                    />
+                </Box>;
+    }, [showPagination, matched_docs, amountPerPage, pageNumber]);
+
+    const photoPostsContainer = useMemo(()=>{
+        if(searchError)
+            return <Typography variant="h5" color="error">An error occurred while fetching the data.</Typography>
+
+        if(searchResults || isLoading)
+            return <PhotoPostsContainer posts={searchResults?.posts} isLoading={isLoading} loadingAmount={visiblePostsCount || amountPerPage}/>
+
+        return null;
+    }, [searchResults, searchError, isLoading, visiblePostsCount, amountPerPage]);
 
     return (
         <Box>
             <br/>
             <Typography variant="h4">Stock Images - Search Results</Typography>
-            {searchResult ? <Typography variant="subtitle" sx={{mb : 3}}>Showing {searchResult.posts.length} {matched_docs > 0 ? ` of ${matched_docs} ` : null} posts in {searchResult.time}s</Typography> : null}
-            
-            {showPagination ? <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
-                <Pagination 
-                    count={Math.round(matched_docs / amountPerPage)} 
-                    showFirstButton 
-                    variant="outlined" 
-                    shape="rounded" 
-                    size="large"
-                    page={pageNumber}
-                    id="top-post-navigation"
-                    onChange={(event, value)=>{setPageNumber(value);}}
-                />
-            </Box> : null}
-            
-        
-            <PhotoPostsContainer posts={searchResult?.posts} isLoading={isLoading} loadingAmount={visiblePostsCount}/>
+            {
+                searchResults?.posts 
+                ? <Typography variant="subtitle" sx={{mb : 3}}>
+                    Showing {searchResults.posts.length} {matched_docs > 0 ? ` of ${matched_docs} ` : null} posts in {searchResults.time}s
+                  </Typography> 
+                : null
+            }
 
-            {showPagination ? <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
-                <Pagination 
-                    count={Math.round(matched_docs / amountPerPage)}
-                    showFirstButton 
-                    variant="outlined" 
-                    shape="rounded" 
-                    size="large"
-                    page={pageNumber}
-                    id="bottom-post-navigation"
-                    onChange={(event, value)=>{setPageNumber(value); document.getElementById("top-post-navigation").scrollIntoView();}}
-                />
-            </Box> : null}
+            {paginationContainer}
+            
+            {photoPostsContainer}
+            
+            {paginationContainer}
+
+            <br/>
 
             {
-                visiblePostsCount > 0 && matched_docs > visiblePostsCount && !isLoading  
-                ? <center><Link href={`/search/posts/${search_query.query}`}><Button variant="contained">View All Results</Button></Link></center> : null
+                matched_docs > (visiblePostsCount || amountPerPage) && !showPagination  
+                ? <center><Link href={onClickGo(null, {query, options, type : "stockimages"})}><Button variant="contained">View All Results</Button></Link></center> 
+                : null
             }
             
             <br/>

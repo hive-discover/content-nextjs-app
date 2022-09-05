@@ -1,11 +1,16 @@
 import { useState} from 'react';
+import { useRouter } from 'next/router';
 
 import { Button, Grid, FormControl, InputLabel, Input, FormHelperText, Select, MenuItem, Tooltip } from "@mui/material";
 
-export default function form({queryValue, setQueryValue, onClick}){
-    const [inputAuthors, setInputAuthors] = useState(queryValue.authors || []);
-    const [inputTags, setInputTags] = useState(queryValue.tags || []);
-    const [inputParentPermlinks, setInputParentPermlinks] = useState(queryValue.parent_permlinks || []);
+import {onClickGo} from '../../lib/search';
+
+export default function form({queryValue, setQueryValue}){
+    const router = useRouter();
+
+    const [inputAuthors, setInputAuthors] = useState(queryValue.options?.authors || []);
+    const [inputTags, setInputTags] = useState(queryValue.options?.tags || []);
+    const [inputParentPermlinks, setInputParentPermlinks] = useState(queryValue.options?.parent_permlinks || []);
 
     return (
         <Grid container sx={{m : 1, width : "100%"}} justifyContent="center" alignItems="center" spacing={3}>
@@ -17,7 +22,7 @@ export default function form({queryValue, setQueryValue, onClick}){
                         value={inputAuthors.join(" ")} 
                         onChange={(e) => setInputAuthors(e.target.value.split(" ").map(a => a.trim().replace("@", "")))}
                         onBlur={(e) => setQueryValue({...queryValue, authors : inputAuthors})}
-                        onKeyPress={(event) => {if(event.key === "Enter"){onClick();}}}
+                        onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, "posts");}}} 
                         aria-describedby="post-input-authors-helper" 
                     />
                     <FormHelperText id="post-input-authors-helper">
@@ -34,7 +39,7 @@ export default function form({queryValue, setQueryValue, onClick}){
                         value={inputTags.join(" ")} 
                         onChange={(e) => setInputTags(e.target.value.split(" ").map(a => a.trim().replace("@", "")))}
                         onBlur={(e) => setQueryValue({...queryValue, tags : inputTags})}
-                        onKeyPress={(event) => {if(event.key === "Enter"){onClick();}}}
+                        onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, "posts");}}} 
                         aria-describedby="post-input-tags-helper"
                     />
                     <FormHelperText id="post-input-tags-helper">
@@ -51,7 +56,7 @@ export default function form({queryValue, setQueryValue, onClick}){
                         value={inputParentPermlinks.join(" ")} 
                         onChange={(e) => setInputParentPermlinks(e.target.value.split(" ").map(a => a.trim().replace("@", "")))}
                         onBlur={(e) => setQueryValue({...queryValue, parent_permlinks : inputParentPermlinks})}
-                        onKeyPress={(event) => {if(event.key === "Enter"){onClick(setInputAuthors(null));}}}
+                        onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, "posts");}}} 
                         aria-describedby="post-input-categories-helper"
                     />
                     <FormHelperText id="post-input-categories-helper">

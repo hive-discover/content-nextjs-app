@@ -1,98 +1,85 @@
-import useSwr from 'swr';
-import {useState, useEffect} from 'react';
-import dynamic from 'next/dynamic';
+import useSWRImmutable from 'swr/immutable';
+import {useState, useMemo} from 'react';
 import Link from 'next/link';
 
-import { Button, Box, Grid, Pagination, Typography } from '@mui/material';
+import { Button, Box, Grid, Pagination, Typography, CircularProgress } from '@mui/material';
+import ProfileColumnCard from "../../components/ProfileColumnCard/ProfileColumnCard"
 
-const ProfileColumnCard = dynamic(() => import("../../components/ProfileColumnCard/ProfileColumnCard"));
+import {onClickGo, fetchSearch} from '../../lib/search';
 
-const fetchSearch = async ({searchBody}) => {
-    const url = "https://api.hive-discover.tech/v1/search/accounts";
-    const res = await fetch(url, {method : "POST", body : JSON.stringify(searchBody), headers : {'Content-Type' : 'application/json'}}).then(res => res.json());
-    
-    if(res.status !== "ok"){
-        const error = new Error("An error occurred while fetching the data.");
-        error.response = res;
-        throw error;
-    }
-    
-    return res;
-}
 
-export default function AccountResults(props){
-    const {search_query, visibleAccountsCount} = props;
+export default function AccountResults({query, options, visibleAccountsCount, amountPerPage = 30}){
     const [pageNumber, setPageNumber] = useState(1);
 
-    const amountPerPage = 24;
-    const searchBody = {...search_query, amount : visibleAccountsCount ? visibleAccountsCount : amountPerPage, highlight : true, page_number : pageNumber};
-    const {data : searchResult, error : searchError} = useSwr({searchBody, pageNumber}, fetchSearch);
-    const isLoading = !searchResult && searchError !== null;
+    const searchBody = {query : query, ...options, amount : visibleAccountsCount || amountPerPage, highlight : true, page_number : pageNumber, type : "accounts"};
+    const {data : searchResults, error : searchError} = useSWRImmutable(searchBody, fetchSearch("/search/accounts"));
+    const isLoading = !searchResults && !searchError;
 
-    const matched_accs = (searchResult && searchResult.total_matched_accounts) ? searchResult.total_matched_accounts : -1;
+    const matched_accs = (searchResults && searchResults?.total_matched_accounts > 0) ? searchResults.total_matched_accounts : -1;
     const showPagination = matched_accs > amountPerPage && !isLoading && !visibleAccountsCount 
+
+    const paginationContainer = useMemo(()=>{
+        if(!showPagination)
+            return null;
+
+        return <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
+                    <Pagination 
+                        count={Math.ceil(matched_accs / amountPerPage)} 
+                        showFirstButton 
+                        variant="outlined" 
+                        shape="rounded" 
+                        size="large"
+                        page={pageNumber}
+                        id="top-post-navigation"
+                        onChange={(event, value)=>{setPageNumber(value);}}
+                    />
+                </Box> 
+    }, [showPagination, matched_accs, amountPerPage, pageNumber]);
+
+    const accountsContainer = useMemo(()=>{
+        if(searchError)
+            return <Typography variant="h5" color="error">An error occurred while fetching the data.</Typography>
+
+        if(searchResults?.accounts){
+            return <Grid container spacing={3} alignItems="center">
+                {searchResults.accounts.map((acc, index) => (
+                    <Grid item key={index} xs={12} sm={6} md={4}>
+                        <ProfileColumnCard username={acc.name} profile={acc.json_metadata.profile} clickable={true}/>
+                    </Grid>
+                ))}
+            </Grid>
+        }
+
+        if(isLoading)
+            return <center><CircularProgress /> <Typography variant="h5">Loading...</Typography></center>
+
+        return null;
+    }, [searchError, searchResults, visibleAccountsCount, amountPerPage]);
+
     return (
         <Box sx={{width : "100%"}}>
             <br/>
             <Typography variant="h4">Accounts - Search Results</Typography>
             
             {
-                searchResult 
-                ? <Typography variant="subtitle" sx={{mb : 3}}>Showing {searchResult.accounts.length} {matched_accs > 0 ? ` of ${matched_accs} ` : null} accounts in {searchResult.time}s</Typography> 
+                searchResults?.accounts 
+                ? <Typography variant="subtitle" sx={{mb : 3}}>
+                    Showing {searchResults.accounts.length} {matched_accs > 0 ? ` of ${matched_accs} ` : null} accounts in {searchResults.time}s
+                    </Typography> 
                 : null
             }
             
-            {
-                showPagination 
-                ?   <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
-                        <Pagination 
-                            count={Math.round(matched_accs / amountPerPage)} 
-                            showFirstButton 
-                            variant="outlined" 
-                            shape="rounded" 
-                            size="large"
-                            page={pageNumber}
-                            id="top-post-navigation"
-                            onChange={(event, value)=>{setPageNumber(value);}}
-                        />
-                    </Box> 
-                : null
-            }
+            {paginationContainer}
             
-            {
-                searchResult 
-                ?   <Grid container spacing={3} alignItems="center">
-                        {searchResult.accounts.map((acc, index) => (
-                            <Grid item key={index} xs={12} sm={6} md={4}>
-                                <ProfileColumnCard username={acc.name} profile={acc.json_metadata.profile} clickable={true}/>
-                            </Grid>
-                        ))}
-                    </Grid>
-                : null
-            }
+            {accountsContainer}
         
-            {
-                showPagination 
-                ?   <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
-                        <Pagination 
-                            count={Math.round(matched_accs / amountPerPage)}
-                            showFirstButton 
-                            variant="outlined" 
-                            shape="rounded" 
-                            size="large"
-                            page={pageNumber}
-                            id="bottom-post-navigation"
-                            onChange={(event, value)=>{setPageNumber(value); document.getElementById("top-post-navigation").scrollIntoView();}}
-                        />
-                    </Box> 
-                : null
-            }
+            {paginationContainer}
 
             <br/>
 
             {
-                visibleAccountsCount > 0 && matched_accs > visibleAccountsCount && !isLoading  
-                ? <center><Link href={`/search/accounts/${search_query.query}`}><Button variant="contained">View All Results</Button></Link></center> 
+                matched_accs > (visibleAccountsCount || amountPerPage) && !showPagination  
+                ? <center><Link href={onClickGo(null, {query, options, type : "accounts"})}><Button variant="contained">View All Results</Button></Link></center> 
                 : null
             }
 

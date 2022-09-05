@@ -8,6 +8,8 @@ import { styled, alpha } from '@mui/material/styles';
 import { Box, Button, Divider, CircularProgress, Grid, InputBase, Typography } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
 
+import {onClickGo} from '../../lib/search';
+
 const PostSearchForm = dynamic(() => import('./PostSearchForm'), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
 const Search = styled('div')(({ theme }) => ({
@@ -43,10 +45,10 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
 }));
 
-const getSearchOptions = (type, queryValue, setQueryValue, onClickGo) => {
+const getSearchOptions = (type, queryValue, setQueryValue) => {
     switch(type){
         case "posts":
-            return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} onClick={onClickGo} />
+            return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} />
         case "accounts":
             return null;
         case "stockimages":
@@ -55,37 +57,19 @@ const getSearchOptions = (type, queryValue, setQueryValue, onClickGo) => {
             return (
                 <Box>
                     Filter Search Types: 
-                        <Link href={`/search/posts/${queryValue.query}`} passHref><Button>Posts</Button></Link>
+                        <Link href={onClickGo(null, queryValue, "posts")} passHref><Button>Posts</Button></Link>
                         
-                        <Link href={`/search/accounts/${queryValue.query}`} passHref><Button>Accounts</Button></Link>
+                        <Link href={onClickGo(null, queryValue, "accounts")} passHref><Button>Accounts</Button></Link>
                         
-                        <Link href={`/search/stockimages/${queryValue.query}`} passHref><Button>StockImages</Button></Link>
+                        <Link href={onClickGo(null, queryValue, "stockimages")} passHref><Button>StockImages</Button></Link>
                 </Box>
             );
     }
 }
 
-export default function SearchBar({type, search_query}){
+export default function SearchBar({pre_type, pre_query, pre_options}){
     const router = useRouter();
-
-    const [queryValue, setQueryValue] = useState(search_query);
-
-    const onClickGo = () => {
-        let params = [];
-        if(queryValue.authors && queryValue.authors.length > 0){
-            params.push(`authors=${queryValue.authors.join(",")}`);
-        }
-        if(queryValue.tags && queryValue.tags.length > 0){
-            params.push(`tags=${queryValue.tags.join(",")}`);
-        }
-        if(queryValue.parent_permlinks && queryValue.parent_permlinks.length > 0){
-            params.push(`parent_permlinks=${queryValue.parent_permlinks.join(",")}`);
-        }
-
-        if(queryValue.query.length > 0){
-            router.push(`/search/${type ? (type + "/") : ""}${params.length > 0 ? params.join("/") + "/" : ""}${queryValue.query}`);
-        }
-    }
+    const [queryValue, setQueryValue] = useState({type : pre_type, options : pre_options, query : pre_query});
     
     return (
         <Box sx={{width : "100%"}}>
@@ -112,18 +96,18 @@ export default function SearchBar({type, search_query}){
                             value={queryValue?.query}
                             sx={{width : "100%"}}
                             onChange={(event) => {setQueryValue({...queryValue, query : event.target.value });}}     
-                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo();}}}                       
+                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue);}}}                       
                         />
                     </Search>                    
 
-                    {getSearchOptions(type, queryValue, setQueryValue, onClickGo)}
+                    {getSearchOptions(pre_type, queryValue, setQueryValue)}
                 </Grid>
 
                 <Grid item xs={12} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>
                     {
-                        type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
+                        pre_type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
                     }
-                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={onClickGo}>Go!</Button>
+                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={() => {queryValue.type = null; onClickGo(router, queryValue)}}>Go!</Button>
                 </Grid>
             </Grid>
         </Box>
