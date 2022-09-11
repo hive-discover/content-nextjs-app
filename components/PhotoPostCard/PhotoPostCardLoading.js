@@ -1,11 +1,11 @@
-import {Grid, Skeleton} from '@mui/material'
+import {Box, Skeleton} from '@mui/material'
 
 import PostStats from '../../components/PostStats/PostStats';
 
 export default function PhotoPostCardLoading(){
 
     return (
-        <Grid item xs={12} sm={6} md={4}>
+        <Box sx={{width : "100%"}}>
             {/* Title Loading  */}
             <Skeleton variant="text" width="100%" height={32} /> 
             <Skeleton variant="text" width="100%" height={32} />           
@@ -15,6 +15,6 @@ export default function PhotoPostCardLoading(){
             
             {/* PostStats has an own loader */}
             <PostStats post={null} />
-        </Grid>
+        </Box>
     )
 }

@@ -62,11 +62,11 @@ const doHighlighting = async (highlight, setTitle, setBody) => {
 }
 
 
-export default function RowPostcard({ post, author, permlink, highlight, onInViewpoint}){    
+export default function RowPostcard({ showLoading = false, post, author, permlink, highlight, onInViewpoint}){    
     post = {author, permlink, ...post}; // ensure author and permlink are set
 
     // Set hooks 
-    const {data : newestPost, pending : postLoading, error : postError} = useHivePost(post);
+    const {data : newestPost, pending : postLoading, error : postError} = useHivePost(!showLoading ? post : null);
     const [thumbnailErrors, setThumbnailErrors] = useState(0);
     const [title, setTitle] = useState(newestPost?.title);
     const [body, setBody] = useState(newestPost?.json_metadata?.description);
@@ -94,8 +94,8 @@ export default function RowPostcard({ post, author, permlink, highlight, onInVie
     
     const thumbnail = getThumbnailImage(newestPost?.json_metadata, thumbnailErrors);
 
-    if(postLoading)
-        return <RowPostCardLoading />
+    if(postLoading || showLoading)
+        return <RowPostCardLoading/>
     if(postError)
         return null; // Just skip this post
 
@@ -118,7 +118,8 @@ export default function RowPostcard({ post, author, permlink, highlight, onInVie
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
-                <CardContent sx={{width : "100%"}} ref={bodyRef}>     
+                <div ref={bodyRef}></div>
+                <CardContent sx={{width : "100%"}}>     
                     <Link href={newestPost.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               

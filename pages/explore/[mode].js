@@ -9,15 +9,10 @@ import { useRouterScroll } from '@moxy/next-router-scroll';
 import { Button, Container, Divider, CircularProgress } from "@mui/material";
 
 import {getDeviceKeyEncodedMessage} from '../../lib/backendAuth';
-import {chooseMode} from '../../lib/exploration'
+import {chooseMode, getLogOnInViewpointFunction} from '../../lib/exploration'
 
 const BigPostContainer = dynamic(() => import("../../components/BigPostContainer/BigPostContainer"), {ssr: false, loading: () => <center><CircularProgress /></center>});
 const LoginModal = dynamic(() => import("../../components/LoginModal/LoginModal"), {ssr: false, loading: () => <center><CircularProgress /></center>});
-
-const HiveDiscoverAPI_POST_Fetcher = ({data, path}) => fetch("https://api.hive-discover.tech/v1" + path, {method : "POST", body : JSON.stringify(data), headers : {'Content-Type' : 'application/json'}})
-  .then(res => res.json())
-
- 
 
 export default function exploreModeVise(props){
     const router = useRouter();
@@ -28,18 +23,19 @@ export default function exploreModeVise(props){
     const {data : msg_encoded} = useSWR(session, getDeviceKeyEncodedMessage, {refreshInterval : 60});
 
     const modeLoading = (!router.isReady || sessionStatus === "loading" || (session && !msg_encoded));
-    const {title, dataHook, allowed, logInViewpoint} = chooseMode(mode, session, modeLoading, msg_encoded);
+    let {title, dataHook, allowed, logInViewpoint} = chooseMode(mode, session, modeLoading, msg_encoded);
     const {data : hookData, error, isValidating, mutate} = dataHook();
 
     useEffect(()=>{
             if(!modeLoading && !(!allowed || error) && hookData?.posts.length > 0)
                 updateScroll();
-        });
+        }, [modeLoading, allowed, error, hookData]);
 
     if(modeLoading){
         return <center><CircularProgress /></center>
     }
 
+    allowed = error?.message === "401" ? null : allowed;
     if(!allowed || error){
         return <Container>
             {
@@ -48,22 +44,9 @@ export default function exploreModeVise(props){
             }
             {
                 // Show not allowed ==> oportunity to login
-                !allowed ? <center><h3>Please sign in</h3> <LoginModal isOpen={true} /> </center> : null
+                !allowed ? <center><h3>Please sign in</h3> <LoginModal isOpen={true} signOff={true} /> </center> : null
             }
         </Container>
-    }
-
-    const logOnInViewpoint = async (post) => {
-        const result = await HiveDiscoverAPI_POST_Fetcher({
-            data : {
-                msg_encoded, 
-                metadata : {author : post.author, permlink : post.permlink},
-                activity_type : "post_recommended",
-                private_memo_key : session?.user.privateMemoKey, 
-                username : session?.user.name
-            }, 
-            path : "/activities/add"
-        });
     }
 
     const postsAreLoading = !hookData || isValidating;
@@ -71,7 +54,7 @@ export default function exploreModeVise(props){
         <h1>{title}</h1>
         <Divider />
 
-        <BigPostContainer posts={hookData?.posts} isLoading={postsAreLoading} loadingAmount={25} onInViewpoint={logInViewpoint ? logOnInViewpoint : null} />
+        <BigPostContainer posts={hookData?.posts} isLoading={postsAreLoading} loadingAmount={25} onInViewpoint={logInViewpoint ? getLogOnInViewpointFunction(session, msg_encoded) : null} />
 
         {
             // Refresh

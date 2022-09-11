@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import {signOut} from 'next-auth/react';
 
 import Box from '@mui/material/Box';
 import Modal from '@mui/material/Modal';
@@ -26,11 +27,17 @@ const style = {
 };
 
 
-export default function LoginModal({isOpen = false, setIsOpen = () => {}, stepNumber = 1}) {
+export default function LoginModal({isOpen = false, signOff = false, setIsOpen = () => {}, stepNumber = 1}) {
     
     const [username, setUsername] = useState("");
     const [privateMemoKey, setPrivateMemoKey] = useState("");
     const [step, setStepNumber] = useState(stepNumber);
+
+    useEffect(()=>{
+        if(signOff){
+            signOut({redirect : false});
+        }
+    }, [signOff]);
 
     return (
     <Backdrop>

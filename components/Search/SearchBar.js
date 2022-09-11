@@ -96,7 +96,7 @@ export default function SearchBar({pre_type, pre_query, pre_options}){
                             value={queryValue?.query}
                             sx={{width : "100%"}}
                             onChange={(event) => {setQueryValue({...queryValue, query : event.target.value });}}     
-                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue);}}}                       
+                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, pre_type);}}}                       
                         />
                     </Search>                    
 
@@ -107,7 +107,7 @@ export default function SearchBar({pre_type, pre_query, pre_options}){
                     {
                         pre_type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
                     }
-                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={() => {queryValue.type = null; onClickGo(router, queryValue)}}>Go!</Button>
+                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={() => {queryValue.type = null; onClickGo(router, queryValue, pre_type)}}>Go!</Button>
                 </Grid>
             </Grid>
         </Box>
