@@ -10,23 +10,30 @@ import PhotoLoader from '../../lib/imageHosterLoader'
 import useHivePost from '../../lib/hooks/hive/useHivePost';
 import useIntersection from '../../lib/hooks/useIntersection';
 
-const setImageCaroussel = (metadata, post_url) => {
+const setImageCaroussel = (metadata, post_url, img_url) => {
     if(!Array.isArray(metadata?.image) || metadata.image.length === 0)
         return null;
     
+    if(img_url?.length > 5)
+    return (
+            <img src={PhotoLoader({src : img_url})} width="100%" />
+        )
+
     return (
         <img src={PhotoLoader({src : metadata.image[0]})} width="100%" />
     )
 }
 
-export default function PhotoPostCard({post, author, permlink, lazyLoad = true}){
-    post = {author, permlink, ...post}; // ensure author and permlink are set
+export default function PhotoPostCard({post, author, permlink, lazyLoad = true, img_url = null}){
+    post = {author, permlink, img_url, ...post}; // ensure author and permlink are set
 
     const loadingRef = useRef(null);
     const loadingInViewpoint = useIntersection(loadingRef, "+300px");
     const {data : newestPost, pending : postLoading, error : postError} = useHivePost((!lazyLoad || loadingInViewpoint) ? post : null);
     const postStats = useMemo(()=>(<PostStats post={newestPost} showTimestamp={true}/>), [newestPost]);
-    const imageCarousel = useMemo(()=>(setImageCaroussel(newestPost?.json_metadata, newestPost?.url)), [newestPost]);
+    const imageCarousel = useMemo(()=>(
+        setImageCaroussel(newestPost?.json_metadata, newestPost?.url, post.img_url))
+    , [newestPost, post]);
 
 
     if(postLoading || (!loadingInViewpoint && lazyLoad))

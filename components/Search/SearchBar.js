@@ -51,6 +51,8 @@ const getSearchOptions = (type, queryValue, setQueryValue) => {
             return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} />
         case "accounts":
             return null;
+        case "images":
+            return null;
         case "stockimages":
             return null;
         default:
@@ -60,6 +62,8 @@ const getSearchOptions = (type, queryValue, setQueryValue) => {
                         <Link href={onClickGo(null, queryValue, "posts")} passHref><Button>Posts</Button></Link>
                         
                         <Link href={onClickGo(null, queryValue, "accounts")} passHref><Button>Accounts</Button></Link>
+
+                        <Link href={onClickGo(null, queryValue, "images")} passHref><Button>Images</Button></Link>
                         
                         <Link href={onClickGo(null, queryValue, "stockimages")} passHref><Button>StockImages</Button></Link>
                 </Box>
@@ -79,7 +83,7 @@ export default function SearchBar({pre_type, pre_query, pre_options}){
                         Search on HIVE
                     </Typography>
                     <Typography component="h3" variant="subtitle">
-                        Posts, Accounts, StockImages - all in one place
+                        Posts, Accounts, Images - all in one place
                     </Typography>
                 </Grid>
 

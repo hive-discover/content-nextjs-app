@@ -14,8 +14,9 @@ import SearchBar from "../../components/Search/SearchBar";
 const PostResults = dynamic(() => import("../../components/Search/PostResults"), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 const AccountResults = dynamic(() => import("../../components/Search/AccountResults"), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 const StockImageResults = dynamic(() => import("../../components/Search/StockImageResults"), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
+const ImageResults = dynamic(() => import("../../components/Search/ImageResults"), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
-const types = ["posts", "accounts", "stockimages"]
+const types = ["posts", "accounts", "images", "stockimages"]
 
 // Rules:
 // 1. The Type-Filter for Posts/Accounts/StockImages must be the first item in the array 
@@ -82,6 +83,10 @@ export default function Search() {
 
             {
                 query && (!type || type === "accounts") ? <AccountResults query={query} options={options} visibleAccountsCount={type !== "accounts" ? 6 : null}/> : null
+            }
+
+            {
+                query && (!type || type === "images") ? <ImageResults query={query} options={options} visiblePostsCount={type !== "images" ? 3 : null}/> : null
             }
 
             {
