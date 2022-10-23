@@ -13,7 +13,7 @@ export default function PostResults({query, options, visiblePostsCount, amountPe
     const [pageNumber, setPageNumber] = useState(1);
 
     const searchBody = {query : query, ...options, amount : visiblePostsCount ? visiblePostsCount : amountPerPage, highlight : true, page_number : pageNumber, type : "posts"};
-    const {data : searchResults, error : searchError} = useSWRImmutable(searchBody, fetchSearch("/smart-search"));
+    const {data : searchResults, error : searchError} = useSWRImmutable(searchBody, fetchSearch("/search/posts"));
     const isLoading = !searchResults && !searchError;
 
     const matched_docs = (searchResults && searchResults?.total_matched_docs > 0) ? Math.min(searchResults.total_matched_docs) : -1;

@@ -173,7 +173,7 @@ export default function CommunityIndex(props){
             }
 
             {
-                allowed ? <BigPostContainer posts={hookData?.posts} loading={postsAreLoading} loadingAmount={25}/> : null
+                allowed ? <BigPostContainer posts={hookData?.posts} loading={postsAreLoading} loadingAmount={25} fullData={true}/> : null
             }
         </Container>
     )

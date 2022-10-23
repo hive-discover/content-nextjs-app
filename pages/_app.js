@@ -36,6 +36,8 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
     router.events.on("routeChangeError", (url) => {setLoading(null)});
   }, [router]);
 
+  const loginModalState = useState(false);
+
   return (
     <Fragment>
       <Head>
@@ -51,10 +53,10 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
           <SessionProvider session={session}>
             <Provider store={store}>
               <RouterScrollProvider disableNextLinkScroll={false}>
-                <Layout>
+                <Layout loginModalState={loginModalState}>
                   {/* Show loading State  */}
                   {loading ? <DefaultLoader /> : null }
-                  <Component {...pageProps} />
+                  <Component {...pageProps} loginModalState={loginModalState}/>
                 </Layout>
               </RouterScrollProvider>
             </Provider>

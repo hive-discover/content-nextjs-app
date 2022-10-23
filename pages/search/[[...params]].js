@@ -82,15 +82,15 @@ export default function Search() {
             }
 
             {
-                query && (!type || type === "accounts") ? <AccountResults query={query} options={options} visibleAccountsCount={type !== "accounts" ? 6 : null}/> : null
-            }
-
-            {
                 query && (!type || type === "images") ? <ImageResults query={query} options={options} visiblePostsCount={type !== "images" ? 3 : null}/> : null
             }
 
             {
                 query && (!type || type === "stockimages") ? <StockImageResults query={query} options={options} visiblePostsCount={type !== "stockimages" ? 3 : null}/> : null
+            }
+
+            {
+                query && (!type || type === "accounts") ? <AccountResults query={query} options={options} visibleAccountsCount={type !== "accounts" ? 6 : null}/> : null
             }
 
         </Container>

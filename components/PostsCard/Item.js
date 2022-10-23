@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 
-import {Box, Card, CardActionArea, Skeleton, Typography, Grid} from '@mui/material'
+import {Box, Card, CardActionArea, Skeleton, Typography, Grid, Divider} from '@mui/material'
 import myLoader from '../../lib/imageHosterLoader';
 import useHivePost from '../../lib/hooks/hive/useHivePost';
 
@@ -46,7 +46,6 @@ export default function Item({author, permlink, post, clickThroughMetadata}){
         return loader();
     if(postError)
         return null;
-
 
     const metadata = newestPost.json_metadata;
     const thumbnail = getThumbnailImage(metadata);

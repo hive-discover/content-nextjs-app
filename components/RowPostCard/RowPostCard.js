@@ -8,7 +8,7 @@ import Image from 'next/image';
 
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import {Chip, Box, Grid, CardContent, CardActionArea, Typography} from '@mui/material'
+import {Chip, Box, Grid, CardContent, CardActionArea, Typography, Divider} from '@mui/material'
 
 const RowPostCardLoading = dynamic(() => import('./RowPostCardLoading'));
 import CategoryChip from '../../components/CategoryChip/CategoryChip';
@@ -99,6 +99,9 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
     if(postError)
         return null; // Just skip this post
 
+    const isPinned = post?.stats?.is_pinned; // Only when we got the Bridge.get_ranked_posts data
+    console.log(isPinned);
+
     return (
         <Grid container sx={{mt : {xs : 3, sm : 0, md : 3}, mb : {xs : 3, sm : 0, md : 3}}}>
             {/* Thumbnail Image */}
@@ -120,6 +123,11 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
                 <div ref={bodyRef}></div>
                 <CardContent sx={{width : "100%"}}>     
+                {/* {
+                    isPinned
+                    ? (<Divider><Chip label="Pinned" color="primary" variant="outlined"/></Divider>)
+                    : null
+                } */}
                     <Link href={newestPost.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               
@@ -127,11 +135,21 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
                                 &nbsp;&nbsp; 
                                 <CategoryChip category={newestPost.category} />       
                                 &nbsp;&nbsp;  
-                                {newestPost.isReblog || newestPost.isCrosspost ? (<Chip 
-                                    label={newestPost.isReblog ? "Reblogged" : "Crosspost"} 
-                                    color="primary"
-                                    size="small"
-                                />) : null}                                                                          
+                                {
+                                    newestPost.isReblog || newestPost.isCrosspost 
+                                    ? (<Chip 
+                                        label={newestPost.isReblog ? "Reblogged" : "Crosspost"} 
+                                        color="primary"
+                                        size="small"
+                                        />) 
+                                    : null
+                                }  
+                                &nbsp;&nbsp;  
+                                {
+                                    isPinned
+                                    ? (<Chip label="Pinned" color="primary" variant="outlined"/>)
+                                    : null
+                                }                                                                        
                             </Typography>
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
                                 { body }  

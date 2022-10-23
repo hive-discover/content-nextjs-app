@@ -226,7 +226,7 @@ const getPreloads = (session)=>{
   </Head>);
 }
 
-export default function Layout({children, ...props}) {
+export default function Layout({children, loginModalState = null, ...props}) {
   const router = useRouter();
   const theme = useTheme();
   const useSideDrawer = useMediaQuery(theme.breakpoints.down('md'));
@@ -245,7 +245,7 @@ export default function Layout({children, ...props}) {
   });
 
   // Login Modal Opened
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = (loginModalState || useState(false));
 
   return (
     <>

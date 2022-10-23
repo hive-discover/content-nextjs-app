@@ -18,7 +18,8 @@ import {getDeviceKeyEncodedMessage} from '../../../lib/backendAuth';
 const ProfileColumnCard = dynamic(() => import('../../../components/ProfileColumnCard/ProfileColumnCard'));
 const CommunityCard = dynamic(() => import('../../../components/CommunityCard/CommunityCard'));
 const PostsCard = dynamic(() => import('../../../components/PostsCard/PostsCard'));
-// TODO: Comments dynamic loading
+const Comments = dynamic(() => import('../../../components/Comments/Comments'));
+
 
 const getTextLoader = () => {
     const elem = [
@@ -80,8 +81,7 @@ export default function ShowPost(props){
 
     const { updateScroll } = useRouterScroll();
     const { data: session } = useSession();
-    // const [trackingAuth, setTrackingAuth] = useState(null);
-    const {data : post, pending : postLoading, error : postError} = useHivePost({author, permlink});
+    const {data : post, pending : postLoading, error : postError, mutate : postMutate} = useHivePost({author, permlink});
     const {data : community} = useSWR(`/api/getCommunity/${category}`, (url) => fetch(url).then(r => r.json()));
     const {data : similarPostsByAuthor, error : similarPostsByAuthorError} = useSWR({data : {author, permlink, amount : 7}, path : "/search/similar-by-author"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByCommunity, error : similarPostsByCommunityError} = useSWR({data : {author, permlink, amount : 7, parent_permlinks : [category], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
@@ -151,7 +151,7 @@ export default function ShowPost(props){
 
     // Memo All Parts of this site TODO: add comments here as well
 
-    const postStats = useMemo(()=>{ return <PostStats post={post}/> }, [post]);
+    const postStats = useMemo(()=>{ return <PostStats post={post} mutatePost={postMutate} /> }, [post]);
     const postBodyContent = useMemo(()=>{
         return <>
             <p>{getDate(post ? post.created : null, "Published ")}</p>
@@ -227,14 +227,14 @@ export default function ShowPost(props){
             </Grid>
 
             <Divider variant="middle" orientation='horizontal' />
+
             {postStats}
 
             {/* Placeholder Tag to check, if user read the whole post */}
             <Box ref={postEndRef} />
 
-            <Paper elevation={2} sx={{mt : 1, mb : 1, p : 2}}>
-                <h2 id="comments">Comments ({post?.children || 0})</h2>
-            </Paper>
+            <br/>
+            <Comments post={post} id="comments"/>
         </Container>
     );
 }

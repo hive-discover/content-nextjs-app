@@ -16,28 +16,14 @@ export default function Footer(){
             <Grid container justifyContent="center">
               <Grid item xs={12} sm={6} md={4}>
                 <ListItem button> 
-                  <Link href="/about" passHref>
+                  <Link href="/u/@action-chain" passHref>
                     <ListItemText primary="About us" sx={{textAlign : "center"}}/>
                   </Link>
                 </ListItem>
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Privacy Policy" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Impressum" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
+                  <Link href="https://github.com/hive-discover" passHref>
                     <ListItemText primary="GitHub" sx={{textAlign : "center"}}/>
                   </Link>
                 </ListItem>
@@ -51,8 +37,22 @@ export default function Footer(){
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <ListItem button> 
-                  <Link href="https://status.hive-discover.tech" target="_blank" passHref>
-                    <ListItemText primary="Server Status" sx={{textAlign : "center"}}/>
+                  <Link href="/info/privacy" passHref>
+                    <ListItemText primary="Privacy Policy" sx={{textAlign : "center"}}/>
+                  </Link>
+                </ListItem>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <ListItem button> 
+                  <Link href="/info/imprint" passHref>
+                    <ListItemText primary="Impressum" sx={{textAlign : "center"}}/>
+                  </Link>
+                </ListItem>
+              </Grid>
+              <Grid item xs={12} sm={6} md={4}>
+                <ListItem button> 
+                  <Link href="/info/disclaimer" passHref>
+                    <ListItemText primary="Disclaimer" sx={{textAlign : "center"}}/>
                   </Link>
                 </ListItem>
               </Grid>

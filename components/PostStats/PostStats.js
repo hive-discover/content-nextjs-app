@@ -81,7 +81,7 @@ const AuthorToolTip = (author) => {
 
 import {broadcastVote} from '../../lib/broadcastTrx';
 
-export default function PostStats({post}){
+export default function PostStats({post, replyInfo = false, mutatePost = null}){
     const theme = useTheme();
     const upMD = useMediaQuery(theme.breakpoints.up('md'));
     const upSM = useMediaQuery(theme.breakpoints.up('sm'));
@@ -90,14 +90,31 @@ export default function PostStats({post}){
     const [hisVote, setHisVote] = useState(checkHowVoted(post, session));
     const [openVoteMenue, setOpenVoteMenue] = useState(false);
     const [voteWeight, setVoteWeight] = useState(50);
+    const [lastClick, setLastClick] = useState(-1);
 
     const onClickVote = async () => {
         if(hisVote || !session) return; // We cannot double-vote or not logged in
-        if(openVoteMenue){
-            // Is doubleclick ==> upvote 100%
+
+        setLastClick(Date.now());
+
+        // Only upvote for reply-votes
+        if(replyInfo){
             const success = await broadcastVote(session, post.author, post.permlink, 10000)
-            if(success)
-                setHisVote("up");
+            if(!success)
+                return; // Error
+
+            setHisVote("up");
+            mutatePost && mutatePost();
+        }
+
+        // Upvote aswell when the heart is clicked twice (within 1s)
+        if(openVoteMenue && (Date.now() - lastClick) < 1000 ){
+            const success = await broadcastVote(session, post.author, post.permlink, 10000)
+            if(!success)
+                return; // Error
+
+            setHisVote("up");
+            mutatePost && mutatePost();
         }
 
         // Toggle menue to open or close when it is a double click
@@ -106,23 +123,29 @@ export default function PostStats({post}){
 
     const onClickUpvote = async () => {
         const success = await broadcastVote(session, post.author, post.permlink, voteWeight * 100)
-        if(success)
-            setHisVote("up");
+        if(!success)
+            return;
+
+        mutatePost && mutatePost();
+        setHisVote("up");
     };
 
     const onClickDownvote = async () => {
         const success = await broadcastVote(session, post.author, post.permlink, voteWeight * -100)
-        if(success)
-            setHisVote("down");
+        if(!success)
+            return;
+
+        mutatePost && mutatePost();
+        setHisVote("down");
     };
 
     if(!post) // Show loading
         return <Skeleton width={"100%"} height={"64px"} />
 
     return (
-        <Box>
+        <Box sx={{display : !replyInfo ? "inline" :"flex"}}>
             {/* Author, Votes, Replies and Date */}
-            <Typography variant="caption">
+            <Typography variant="caption" sx={{display : !replyInfo ? "inline" : "flex"}}>
                 <Box sx={{display : "flex", justifyContent : "space-between", alignItems : "center", flexWrap : "nowrap"}}>
                     {AuthorToolTip(post.author)}
 
@@ -135,8 +158,14 @@ export default function PostStats({post}){
                     {hisVote === "down" ? <ThumbDownAlt fontSize={"medium"} color="secondary" /> : null}
                     <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
                     <Link href={post.url + "#comments"} passHref><Forum fontSize={"medium"} /></Link> &nbsp;&nbsp; {post.children}
-                    <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
-                    <PresentToAll fontSize={"medium"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
+                    {
+                        replyInfo 
+                        ? null 
+                        : <>
+                            <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
+                            <PresentToAll fontSize={"medium"} /> &nbsp;&nbsp; {post && post.reblogged_by ? post.reblogged_by.length : 0}
+                        </>
+                    }
                     <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
                     {getPayOut(post, {fontSize : "medium"})}
                     <Divider orientation='vertical' sx={{ml : 0.5, mr : 0.5}} flexItem/>
@@ -145,7 +174,7 @@ export default function PostStats({post}){
 
 
             {/* Vote Options */}
-            { !hisVote && openVoteMenue && session ? 
+            { !hisVote && openVoteMenue && session && !replyInfo ? 
                 (<Stack spacing={2} direction="row" sx={{ mt: 2}} alignItems="center" justifyItems="center">
                     <Button variant="outlined" color="info" onClick={onClickUpvote}><ThumbUpOffAlt /></Button>
                     <Slider valueLabelDisplay="auto" value={voteWeight} onChange={(event, newValue) => {setVoteWeight(newValue);}}/>
