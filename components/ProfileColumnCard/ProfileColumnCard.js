@@ -1,14 +1,15 @@
 
-import useSWR from 'swr';
 import Link from 'next/link';
+import useAccount from '../../lib/hooks/hive/useAccount';
+import useFollowCount from '../../lib/hooks/hive/useFollowCount';
 
 import {Avatar, Button, Box, Divider, Paper, CardContent, Typography, Skeleton} from '@mui/material'
 
 export default function ProfileColumnCard({username, clickable, ...rest}){
     username = (username || "unknown").replace("@", "");
 
-    const {data : follow_data, error : follow_error} = useSWR(`/api/getFollowCount/${username}`, (url) => fetch(url).then(res => res.json()));       
-    const {data : account, error : profile_error} = useSWR(`/api/getAccount/${username}`, (url) => fetch(url).then(res => res.json()));
+    const {data : follow_data, error : follow_error} = useFollowCount({username});       
+    const {data : account, error : profile_error} = useAccount({username});
     
     const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};
     const isLoading = !account && !profile_error;

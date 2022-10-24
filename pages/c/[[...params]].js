@@ -1,7 +1,9 @@
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Head from "next/head";
 import {useSession} from "next-auth/react";
 import useSWR from "swr";
+import { useEffect } from "react";
 
 import Avatar from "@mui/material/Avatar";
 import Box from '@mui/material/Box';
@@ -41,7 +43,7 @@ const modeToTabTitle = {
     "muted" : "Muted"
 };
 
-export default function CommunityIndex(props){
+export default function CommunityIndex({setPreTitle = null}){
     const router = useRouter();
 
     const {data : session, status : sessionStatus} = useSession();
@@ -72,7 +74,20 @@ export default function CommunityIndex(props){
     if(community)
         community.created_at = new Date(community.created_at);
 
+    useEffect(()=>{
+        if(community && setPreTitle)
+            setPreTitle(community.title + (community.title.includes("Community") ? "" : " Community"));
+    }, [community, communityAccount]);
+
     return (
+        <>
+        <Head>
+            {community?.about && <meta property="description" content={community.about} />}
+            {community?.title && <meta property="og:title" content={community.title} />}
+            {community?.about && <meta property="og:description" content={community.about} />}
+            {community && <meta property="og:image" content={`https://images.hive.blog/u/${communityName}/avatar/large`} />}
+        </Head>
+
         <Container>
             <Box sx={{
                     minHeight : {xs : "30vh", sm : "40vh", md : "50vh"}, 
@@ -175,6 +190,6 @@ export default function CommunityIndex(props){
             {
                 allowed ? <BigPostContainer posts={hookData?.posts} loading={postsAreLoading} loadingAmount={25} fullData={true}/> : null
             }
-        </Container>
+        </Container></>
     )
 }

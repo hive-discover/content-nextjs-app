@@ -100,7 +100,6 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
         return null; // Just skip this post
 
     const isPinned = post?.stats?.is_pinned; // Only when we got the Bridge.get_ranked_posts data
-    console.log(isPinned);
 
     return (
         <Grid container sx={{mt : {xs : 3, sm : 0, md : 3}, mb : {xs : 3, sm : 0, md : 3}}}>

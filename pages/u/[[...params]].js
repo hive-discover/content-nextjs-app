@@ -5,6 +5,7 @@ import { useRouter } from 'next/router'
 import Image from 'next/image'
 import { useRouterScroll } from '@moxy/next-router-scroll';
 import {useEffect, useState} from 'react';
+import Head from "next/head";
 
 import Container from '@mui/material/Container'
 import Grid from '@mui/material/Grid'
@@ -15,6 +16,7 @@ import Button from '@mui/material/Button'
 import CircularProgress from '@mui/material/CircularProgress';
 
 import useAccount from '../../lib/hooks/hive/useAccount';
+import useRelationship from '../../lib/hooks/hive/useRelationship';
 import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard'
 const AuthorInteractions = dynamic(() => import('../../components/AuthorInteractions/AuthorInteractions'), {ssr: false, loading: () => <CircularProgress sx={{m : 5}}/>});
 
@@ -38,27 +40,37 @@ const AccountNotFound = () => {
 };
 
 
-export default function User(props){
+export default function User({setPreTitle = null}){
     const router = useRouter()
     const [username, selectedTab, ...rest] = router && router.query.params ? router.query.params : [];
 
     const { data: session } = useSession()
     const { updateScroll } = useRouterScroll();
     const {data : account, pending : accountPending, error : accountError} = useAccount({username});
-    const {data : relation, error : relationError} = useSWR(`/api/getRelationship/${session ? session.user.name : "u"}/${username}`, (url)=> fetch(url).then(res => res.json()));
+    const {data : relation, error : relationError} = useRelationship(session?.user?.name ? [session.user.name, username] : null);
 
     const profile = (account?.posting_json_metadata && account.posting_json_metadata?.profile) ? account.posting_json_metadata.profile : {};    
     
     useEffect(() => {
         if(profile && !accountPending)
+        {
             updateScroll();
+            setPreTitle && setPreTitle(profile.name + " (" + username + ")");
+        }
     }, [profile, accountPending]);
 
-    console.log(accountError, account);
     if(accountError)
         return AccountNotFound();
 
+
     return (
+        <>
+        <Head>
+            {profile?.about && <meta property="description" content={profile.about} />}
+            {account && <meta property="og:title" content={profile?.name || username} />}
+            {profile?.about && <meta property="og:description" content={profile.about} />}
+            {account && <meta property="og:image" content={`https://images.hive.blog/u/${username.replace("@", "") }/avatar/large`} />}
+        </Head>
         <Container>
             {/* Header Stuff */}
             <Grid container 
@@ -82,8 +94,8 @@ export default function User(props){
                     {!session || !username || session.user.name !== username.replace("@", "") 
                         ? ( <Box sx={{ display: 'flex', alignItems: 'center', justifyContent : "center", pl: 1}}>             
                                 <CardActions>
-                                    <Button variant="contained" size="large" color="primary">{relation && relation.follows ? "Unfollow" : "Follow"}</Button>
-                                    <Button variant="contained" size="large" color="primary">{relation && relation.ignores ? "Unmute" : "Mute"}</Button>
+                                    <Button variant="contained" size="large" color="primary">{relation?.follows ? "Unfollow" : "Follow"}</Button>
+                                    <Button variant="contained" size="large" color="primary">{relation?.ignores ? "Unmute" : "Mute"}</Button>
                                 </CardActions>              
                             </Box>
                     ) : null}
@@ -95,6 +107,6 @@ export default function User(props){
             <Box sx={{display : "flex", alignItems : "center", justifyContent : "center", width : "100%"}}>
                 <AuthorInteractions username={username} selectedTab={selectedTab} session={session}/>                                                        
             </Box> 
-        </Container>
+        </Container></>
     );
 }

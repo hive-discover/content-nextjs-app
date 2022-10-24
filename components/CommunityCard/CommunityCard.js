@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import useSWR from 'swr';
+import { useSession } from 'next-auth/react';
+import useCommunity from '../../lib/hooks/hive/useCommunity';
 
 import {Box, Card, CardActionArea, Typography} from '@mui/material'
 
 export default function CommunityCard({name}){
 
-    const { data : community} = useSWR(`/api/getCommunity/${name}`, (url) => fetch(url).then(r => r.json()));
+    const {data : session} = useSession();
+    const { data : community} = useCommunity({name, observer : session?.user?.name});
     const isCommunity = community && community.title && !community.error;
 
     if(!isCommunity)

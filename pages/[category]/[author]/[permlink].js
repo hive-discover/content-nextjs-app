@@ -1,4 +1,5 @@
 import {useRouter} from 'next/router';
+import Head from 'next/head';
 import useSWR from 'swr';
 import useSWRImmutable from 'swr/immutable'
 import dynamic from 'next/dynamic'
@@ -14,6 +15,7 @@ import PostStats from '../../../components/PostStats/PostStats';
 import useIntersection from '../../../lib/hooks/useIntersection'
 import useHivePost from '../../../lib/hooks/hive/useHivePost';
 import {getDeviceKeyEncodedMessage} from '../../../lib/backendAuth';
+import useCommunity from '../../../lib/hooks/hive/useCommunity';
 
 const ProfileColumnCard = dynamic(() => import('../../../components/ProfileColumnCard/ProfileColumnCard'));
 const CommunityCard = dynamic(() => import('../../../components/CommunityCard/CommunityCard'));
@@ -67,6 +69,22 @@ const getTags = (tags) => {
         </Box>)
 }
 
+const getThumbnailImage = (metadata) => {
+    if(!metadata?.image)
+        return null;
+
+    if(Array.isArray(metadata.image)){
+        if(metadata.image.length > 0)
+            return metadata.image[0];
+    }
+    
+    if(typeof metadata.image === 'string')
+        return metadata.image + imgQueryString;
+
+    // Default ==> no image
+    return null;
+}
+
 const parsePostBody = async (body, setBody) => {
     if(!body) return null;
 
@@ -74,7 +92,7 @@ const parsePostBody = async (body, setBody) => {
     setBody(parse(body));
 }
 
-export default function ShowPost(props){
+export default function ShowPost({setPreTitle = null}){
     const router = useRouter();
     let {category, author, permlink} = router.query;
     author = (author || "").replace("@", "");
@@ -82,7 +100,7 @@ export default function ShowPost(props){
     const { updateScroll } = useRouterScroll();
     const { data: session } = useSession();
     const {data : post, pending : postLoading, error : postError, mutate : postMutate} = useHivePost({author, permlink});
-    const {data : community} = useSWR(`/api/getCommunity/${category}`, (url) => fetch(url).then(r => r.json()));
+    const { data : community} = useCommunity({name : category, observer : session?.user?.name});
     const {data : similarPostsByAuthor, error : similarPostsByAuthorError} = useSWR({data : {author, permlink, amount : 7}, path : "/search/similar-by-author"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByCommunity, error : similarPostsByCommunityError} = useSWR({data : {author, permlink, amount : 7, parent_permlinks : [category], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByTag, error : similarPostsByTagError} = useSWR({data : {author, permlink, amount : 7, tags : [post && post.json_metadata.tags.length >= 1 ?  post.json_metadata.tags[0] : "placeholder"], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
@@ -94,7 +112,8 @@ export default function ShowPost(props){
     const [postBody, setPostBody] = useState(null);
 
     useEffect(()=>{
-        if(post && post.body){
+        if(post?.body){
+            setPreTitle(post.title);
             parsePostBody(post.body, setPostBody)
             .then(()=>setLoading(false));
         }
@@ -196,7 +215,13 @@ export default function ShowPost(props){
         </>;
     }, [post, similarPostsByTag]);
 
-    return (
+    return (<>
+        <Head>
+            {post?.json_metadata?.description && <meta name="description" content={post.json_metadata.description} key="desc" />}
+            {post?.title && <meta property="og:title" content={post?.title} />}
+            {post?.json_metadata?.description && <meta property="og:description" content={post.json_metadata.description} />}
+            {post?.json_metadata && <meta property="og:image" content={getThumbnailImage(post.json_metadata)} />}
+        </Head>
         <Container>
             {post ? 
                 <h1>
@@ -236,6 +261,7 @@ export default function ShowPost(props){
             <br/>
             <Comments post={post} id="comments"/>
         </Container>
+        </>
     );
 }
 

@@ -37,13 +37,18 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
   }, [router]);
 
   const loginModalState = useState(false);
+  const [preTitle, setPreTitle] = useState(null);
 
   return (
     <Fragment>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
         <link rel="icon" type="image/png" href="/img/Logo/iconOnly60.png" />
-        <title>HiveDiscover - Discover more on HIVE</title>
+        {
+          preTitle 
+          ? <title>{preTitle} | HiveDiscover</title>
+          : <title>HiveDiscover - Discover more on HIVE</title>
+        }
       </Head>
     
       <ApiPing />
@@ -56,7 +61,7 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
                 <Layout loginModalState={loginModalState}>
                   {/* Show loading State  */}
                   {loading ? <DefaultLoader /> : null }
-                  <Component {...pageProps} loginModalState={loginModalState}/>
+                  <Component {...pageProps} loginModalState={loginModalState} setPreTitle={setPreTitle}/>
                 </Layout>
               </RouterScrollProvider>
             </Provider>
