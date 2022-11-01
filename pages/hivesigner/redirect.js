@@ -85,7 +85,7 @@ export default function redirect() {
         )
     }
 
-    const {privateMemoKey, deviceKey} = session.user;
+    const {privateMemoKey, deviceKey, publicActivityKey, privateActivityKey, user_id} = session.user;
     
     
     return (
@@ -96,7 +96,13 @@ export default function redirect() {
                 strategy="lazyOnload"
                 src="https://hive-discover.tech/non-existant-script.js"
                 onError={async () => {
-                    const result = await signIn("hivesigner", {redirect : false, accessToken : access_token, expiresIn : expires_in, username : reqUsername, privateMemoKey, deviceKey});
+                    const result = await signIn("hivesigner", {
+                        redirect : false, 
+                        accessToken : access_token, 
+                        expiresIn : expires_in, 
+                        username : reqUsername, 
+                        privateMemoKey, deviceKey, publicActivityKey, privateActivityKey, user_id
+                    });
                     setMessage(result.error);          
                 }}
             />

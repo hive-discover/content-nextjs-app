@@ -1,9 +1,9 @@
 import Link from 'next/link';
-import {useState} from 'react';
+import {useState, useEffect} from 'react';
 import { signOut, useSession } from "next-auth/react"
 import dynamic from 'next/dynamic'
 
-import {sessionHasPostingPermission} from '../../lib/backendAuth'
+import {sessionHasPostingPermission, verfiyDeviceKey} from '../../lib/backendAuth'
 import {Avatar, Button, Divider, MenuItem} from '@mui/material';
 
 const StyledMenu = dynamic(() => import('./StyledMenu'));
@@ -15,7 +15,13 @@ export default function LoggedInMenue({session, setLoginModalOpen}) {
         setProfileMenuOpen(false);
     };
 
-    
+    useEffect(()=>{
+        if(!session) return;
+
+        verfiyDeviceKey(session).then((res)=>{
+            // TODO: Log out if device key is not valid
+        })
+    }, [session]);
 
     return (
         <>

@@ -16,7 +16,7 @@ import PostStats from '../../components/PostStats/PostStats';
 
 import myLoader from '../../lib/imageHosterLoader';
 import useHivePost from '../../lib/hooks/hive/useHivePost';
-import useIntersection from '../../lib/hooks/useIntersection'
+import { useInView } from "react-intersection-observer";
 
 const getThumbnailImage = (metadata, thumbnailErrors) => {
     const theme = useTheme();
@@ -72,14 +72,16 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
     const [body, setBody] = useState(newestPost?.json_metadata?.description);
 
     // Fire on in viewpoint event
-    const bodyRef = useRef(null);
-    if(onInViewpoint){
-        const bodyInViewport = useIntersection(bodyRef, '-200px');
-        useEffect(()=>{
-            if(bodyInViewport && body)
-                onInViewpoint(post);
-        },[bodyInViewport, body]);
-    }
+    const [bodyRef, bodyInViewpoint] = useInView({
+        triggerOnce : true,
+        rootMargin : "0px 0px 0px 0px"
+    });
+
+    useEffect(()=>{
+        if(bodyInViewpoint && body && onInViewpoint)
+            onInViewpoint(post);
+    }, [bodyInViewpoint, body, onInViewpoint, post]);
+    
 
     // Parse highlight OR use post metadata
     useEffect(() => {
@@ -120,13 +122,7 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
 
             {/* Post Content */}
             <Grid item xs={12} sm={thumbnail ? 9 : 12} sx={{display : "flex", alignItems : "center"}}>
-                <div ref={bodyRef}></div>
                 <CardContent sx={{width : "100%"}}>     
-                {/* {
-                    isPinned
-                    ? (<Divider><Chip label="Pinned" color="primary" variant="outlined"/></Divider>)
-                    : null
-                } */}
                     <Link href={newestPost.url || "#"} passHref>            
                         <CardActionArea> {/* Title, CommunityTag and Description/Body */}
                             <Typography variant="h5" component="h2" sx={{mb : 1}}>                               
@@ -150,6 +146,7 @@ export default function RowPostcard({ showLoading = false, post, author, permlin
                                     : null
                                 }                                                                        
                             </Typography>
+                            {body && <div ref={bodyRef}></div>}
                             <Typography variant="body1" component="p" sx={{mb : 1}}>                            
                                 { body }  
                             </Typography>

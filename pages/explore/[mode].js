@@ -54,7 +54,7 @@ export default function exploreModeVise(props){
         <h1>{title}</h1>
         <Divider />
 
-        <BigPostContainer posts={hookData?.posts} isLoading={postsAreLoading} loadingAmount={25} onInViewpoint={logInViewpoint ? getLogOnInViewpointFunction(session, msg_encoded) : null} />
+        <BigPostContainer posts={hookData?.posts} isLoading={postsAreLoading} loadingAmount={25} onInViewpoint={logInViewpoint ? getLogOnInViewpointFunction(session) : null} />
 
         {
             // Refresh

@@ -21,7 +21,7 @@ export default function({setIsOpen, setStepNumber}){
     const [isLoading, setIsLoading] = useState(false);
     const [keychainError, setKeychainError] = useState("");
 
-    let {name : username, privateMemoKey, deviceKey} = session?.user;
+    let {name : username, privateMemoKey, deviceKey, publicActivityKey, privateActivityKey, user_id} = session?.user;
 
     if(sessionHasPostingPermission(session)){
         // Logged completely in
@@ -31,9 +31,13 @@ export default function({setIsOpen, setStepNumber}){
     }
 
     const onClick_SignInKeychain = async () => {
-        // Reset deviceKey on failure
-        if(keychainError)
+        // Reset on failure
+        if(keychainError){
             deviceKey = null;
+            publicActivityKey = null;
+            privateActivityKey = null;
+            user_id = null;
+        }
 
         setIsLoading(true);
         setKeychainError("");
@@ -63,7 +67,7 @@ export default function({setIsOpen, setStepNumber}){
     
         // Successfully encoded message ==> signIn
         const encodedMsg = msg;
-        const result = await signIn("keychain", {username, privateMemoKey, encodedMsg, deviceKey, redirect : false});
+        const result = await signIn("keychain", {username, privateMemoKey, encodedMsg, deviceKey, publicActivityKey, privateActivityKey, user_id, redirect : false});
         if(result.error){
             setIsLoading(false);
             setKeychainError(result.error);

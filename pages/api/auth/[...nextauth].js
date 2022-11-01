@@ -6,7 +6,14 @@ import { verifyPrivateKey, verfiyDeviceKey } from '../../../lib/backendAuth';
 
 const backendMinCredentials = {username : "", privateMemoKey : "", deviceKey : ""};
 const backendAuthorize = async (credentials, req) => {
-    const {username, privateMemoKey, deviceKey : prevSessionDeviceKey} = credentials;
+    const {
+        username, 
+        privateMemoKey, 
+        deviceKey : prevSessionDeviceKey,
+        user_id : prevSessionUserId,
+        privateActivityKey : prevSessionPrivateActivityKey,
+        publicActivityKey : prevSessionPublicActivityKey,
+    } = credentials;
 
     // Validate the credentials
     if(username.length < 3)
@@ -22,6 +29,7 @@ const backendAuthorize = async (credentials, req) => {
 
     // Decode the device key from our API
     let deviceKey = prevSessionDeviceKey;
+    let publicActivityKey = prevSessionPublicActivityKey, privateActivityKey = prevSessionPrivateActivityKey, user_id = prevSessionUserId;
     if(!deviceKey || deviceKey.length < 10){
         // Register device at backend API
         const deviceName = `${req.headers['user-agent']}.${Math.floor(Math.random() * 1000000)}`;
@@ -35,14 +43,27 @@ const backendAuthorize = async (credentials, req) => {
         }catch(e){
             return Promise.reject(new Error(`Could not decode device key from backend API`));
         }
+
+
+        // Decode activity_infos: publicActivityKey, privateActivityKey, user_id
+        try{
+            const decoded_msg = hivecrypt.decode(privateMemoKey, deviceRegistration.activity_info.infoMessage);
+            const activity_infos = JSON.parse(decoded_msg.slice(decoded_msg.indexOf("{")));
+            publicActivityKey = activity_infos.publicKey;
+            privateActivityKey = activity_infos.privateKey;
+            user_id = activity_infos.userID;
+        }catch(e){
+            return Promise.reject(new Error(`Could not decode activity infos from backend API`));
+        }
+        
     } 
 
     // Verify device key at backend API
-    if(await verfiyDeviceKey({user : {deviceKey, name : username, privateMemoKey}}) === false)
+    if(await verfiyDeviceKey({user : {deviceKey, name : username, privateMemoKey, publicActivityKey, privateActivityKey, user_id }}) === false)
         return Promise.reject(new Error(`Device key could not be verified at backend API`));
 
     // Successfully verified private memo key
-    return {name : username, privateMemoKey, deviceKey};
+    return {name : username, privateMemoKey, deviceKey, publicActivityKey, privateActivityKey, user_id};
 }
 
 export default NextAuth({
@@ -118,7 +139,13 @@ export default NextAuth({
             if(user?.expiresIn)
                 token.expiresIn = user.expiresIn;
             if(user?.deviceKey)
-                token.deviceKey = user.deviceKey;       
+                token.deviceKey = user.deviceKey;     
+            if(user?.user_id)
+                token.user_id = user.user_id;
+            if(user?.privateActivityKey)
+                token.privateActivityKey = user.privateActivityKey;
+            if(user?.publicActivityKey)
+                token.publicActivityKey = user.publicActivityKey;  
 
             if(account?.privateMemoKey)
                 token.privateMemoKey = account.privateMemoKey;   
@@ -128,6 +155,12 @@ export default NextAuth({
                 token.expiresIn = account.expiresIn;
             if(account?.deviceKey)
                 token.deviceKey = account.deviceKey;
+            if(account?.user_id)
+                token.user_id = account.user_id;
+            if(account?.privateActivityKey)
+                token.privateActivityKey = account.privateActivityKey;
+            if(account?.publicActivityKey)
+                token.publicActivityKey = account.publicActivityKey;
 
             if(account?.provider)
                 token.provider = account.provider;
@@ -141,6 +174,9 @@ export default NextAuth({
             session.user.deviceKey = token.deviceKey;
             session.user.privateMemoKey = token.privateMemoKey;
             session.user.accessToken = token.accessToken;
+            session.user.user_id = token.user_id;
+            session.user.privateActivityKey = token.privateActivityKey;
+            session.user.publicActivityKey = token.publicActivityKey;
 
             return session;
         }

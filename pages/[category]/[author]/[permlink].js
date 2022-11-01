@@ -130,7 +130,8 @@ export default function ShowPost({setPreTitle = null}){
     // Tracking
     const tracking_meta = {
         metadata : {author, permlink},
-        username : session?.user.name
+        username : session?.user.name,
+        user_id : session?.user.user_id
     };
 
     //  1. Post Opened (only once)

@@ -4,6 +4,7 @@ import Head from "next/head";
 import {useSession} from "next-auth/react";
 import useSWR from "swr";
 import { useEffect } from "react";
+import dynamic from 'next/dynamic'
 
 import Avatar from "@mui/material/Avatar";
 import Box from '@mui/material/Box';
@@ -26,6 +27,8 @@ import useCommunity from "../../lib/hooks/hive/useCommunity";
 import useAccount from "../../lib/hooks/hive/useAccount";
 import {getDeviceKeyEncodedMessage} from '../../lib/backendAuth';
 import { CircularProgress } from "@mui/material";
+
+const AllCommunities = dynamic(() => import('../../components/AllCommunities/AllCommunities'), {ssr : false, loading : () => <CircularProgress />});
 
 const modeToTabIndex = {
     "explore" : 0,
@@ -60,6 +63,22 @@ export default function CommunityIndex({setPreTitle = null}){
     const {data : hookData, error : hookError, isValidating, mutate} = dataHook();
     const postsAreLoading = (!hookData && !hookError);
 
+    useEffect(()=>{
+        if(community && setPreTitle && !communityError && !communityAccountError)
+        {
+            if(communityName !== "all")
+                setPreTitle(community.title + (community.title.includes("Community") ? "" : " Community"));
+            else
+                setPreTitle("Communities");
+        }
+    }, [community, communityAccount, communityError, communityAccountError, communityName]);
+
+    if(communityName === "all"){
+        return (<Container>
+            <AllCommunities />
+        </Container>)
+    }
+
     if(communityError || communityAccountError){
         return <Container>
             <center>
@@ -73,11 +92,6 @@ export default function CommunityIndex({setPreTitle = null}){
     const communityMetadata = communityAccount?.posting_json_metadata?.profile || {};
     if(community)
         community.created_at = new Date(community.created_at);
-
-    useEffect(()=>{
-        if(community && setPreTitle)
-            setPreTitle(community.title + (community.title.includes("Community") ? "" : " Community"));
-    }, [community, communityAccount]);
 
     return (
         <>
