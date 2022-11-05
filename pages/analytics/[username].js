@@ -28,11 +28,11 @@ export default function Analytics(props){
     const { data: session } = useSession();
     const {data : msg_encoded} = useSWRImmutable(session, getDeviceKeyEncodedMessage);
     
-    const {privateMemoKey} = session?.user || {};
+    const {privateMemoKey, privateActivityKey : private_activity_key} = session?.user || {};
 
     const {data : activityData, error : activityError} = useSWR(
-        msg_encoded ? `https://api.hive-discover.tech/v1/activities/view?amount=25&username=${username.replace("@", "")}&msg_encoded=${msg_encoded}&private_memo_key=${privateMemoKey}` : null, 
-        (url)=> fetch(url).then(res => res.json())
+        msg_encoded ? `https://api.hive-discover.tech/v1/activities/view?amount=25&username=${username.replace("@", "")}&msg_encoded=${msg_encoded}` : null, 
+        (url)=> fetch(url, { method: 'POST', body : JSON.stringify({private_activity_key}), headers : {'Content-Type' : 'application/json'}}).then(res => res.json())
     );
 
     return (

@@ -1,9 +1,33 @@
 import Link from 'next/link'
+import { useSession } from 'next-auth/react';
+import useSWR from 'swr'
 
 import Container from '@mui/material/Container'
 import Button from '@mui/material/Button'
 
+import {chooseMode} from '../../lib/exploration'
+
+
 export default function explore(props){
+
+    const {data : session, status : sessionStatus} = useSession();
+
+    // Prefetch some of the explore page data
+    const toPrefetch = ["all", "communities", "tags", "trending", "hot", "new"];
+    toPrefetch.forEach(mode => {
+        const {dataHook, allowed} = chooseMode(mode, session, false);
+        if(sessionStatus !== "loading") 
+        {
+            if(allowed) 
+            {
+                dataHook();
+                return;
+            }          
+        }
+               
+        // Session is loading, or the user is not allowed to see this mode
+        useSWR(null, () => null); // dummy hook
+    })
 
     return (
         <Container>

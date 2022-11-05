@@ -90,7 +90,7 @@ const pageLinks = [
     items : [
       {
         title : "Community Feed",
-        href : "explore/communities",
+        href : "/explore/communities",
       },
       "divider",
       // add links to his subscribeed communities
