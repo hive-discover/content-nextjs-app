@@ -68,7 +68,7 @@ export default function ({username, setUsername, privateMemoKey, setPrivateMemoK
             <p style={{color : "red"}}>
                 {authError ? "Attention: " + authError : ""}
             </p>
-            Why do we need your private memo key? - Learn more <a href="https://hivesigner.com/docs/private-memo-key">here</a>.                     
+            Why do we need your private memo key? - Learn more <a href="/hive-139531/@action-chain/encrypt-your-private-data-moving-content-recommendations-inside-web3">here</a>.                     
         </h5>
 
         <Divider variant="middle" sx={{mt : 5, mb : 2}}/>
