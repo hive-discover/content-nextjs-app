@@ -1,12 +1,16 @@
-import {useEffect, useState} from 'react';
-import Router, { useRouter } from 'next/router';
+import {useState} from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 
-import { styled, alpha, useTheme } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 
-import { Box, Button, Divider, Grid, InputBase, Typography, FormControl, InputLabel, Input, FormHelperText,Select,MenuItem } from "@mui/material";
-
+import { Box, Button, Divider, CircularProgress, Grid, InputBase, Typography } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
+
+import {onClickGo} from '../../lib/search';
+
+const PostSearchForm = dynamic(() => import('./PostSearchForm'), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
 const Search = styled('div')(({ theme }) => ({
     position: 'relative',
@@ -41,96 +45,35 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
 }));
 
-const getSearchOptions = (type, queryValue) => {
-    if(!type){
-        // Just let the user choose the type
-        return (
-            <Box>
-                Filter Search Types: 
-                    <Link href={`/search/posts/${queryValue}`} passHref><Button>Posts</Button></Link>
-                    
-                    <Link href={`/search/accounts/${queryValue}`} passHref><Button>Accounts</Button></Link>
-                    
-                    <Link href={`/search/stockimages/${queryValue}`} passHref><Button>StockImages</Button></Link>
-            </Box>
-        )
-    }
+const getSearchOptions = (type, queryValue, setQueryValue) => {
+    switch(type){
+        case "posts":
+            return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} />
+        case "accounts":
+            return null;
+        case "images":
+            return null;
+        case "stockimages":
+            return null;
+        default:
+            return (
+                <Box>
+                    Filter Search Types: 
+                        <Link href={onClickGo(null, queryValue, "posts")} passHref><Button>Posts</Button></Link>
+                        
+                        <Link href={onClickGo(null, queryValue, "accounts")} passHref><Button>Accounts</Button></Link>
 
-    if(type === "posts"){
-        return (
-            <Grid container sx={{m : 1, width : "100%"}} justifyContent="center" spacing={3}>
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="component-simple">By Author</InputLabel>
-                        <Input id="component-simple" value={""} 
-                            // onChange={handleChange} 
-                        />
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="post-input-tags">Tags to include</InputLabel>
-                        <Input
-                            id="post-input-tags"
-                            value={""}
-                            // onChange={handleChange}
-                            aria-describedby="post-input-tags-helper"
-                        />
-                        <FormHelperText id="post-input-tags-helper">
-                            Separate multiple tags with spaces
-                        </FormHelperText>
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl variant="standard" sx={{width : "100%"}}>
-                        <InputLabel htmlFor="post-input-langs">Languages</InputLabel>
-                        <Input
-                            id="post-input-langs"
-                            value={""}
-                            // onChange={handleChange}
-                            aria-describedby="post-input-langs-helper"
-                        />
-                        <FormHelperText id="post-input-langs-helper">
-                            Country codes separated by spaces
-                        </FormHelperText>
-                    </FormControl>
-                </Grid>
-
-                <Grid item xs={12} md={3} sx={{p : 3}}>
-                    <FormControl fullWidth>
-                        <InputLabel id="demo-simple-select-label">Sort mode</InputLabel>
-                        <Select
-                            labelId="demo-simple-select-label"
-                            id="demo-simple-select"
-                            value={"smart"}
-                            label="Sort mode"
-                            // onChange={handleChange}
-                        >
-                            <MenuItem value="smart">Smart</MenuItem>
-                            <MenuItem value="relevance">Relevance</MenuItem>
-                            <MenuItem value="latest">Latest</MenuItem>
-                            <MenuItem value="oldest">Oldest</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Grid>
-            </Grid>
-        )
+                        <Link href={onClickGo(null, queryValue, "images")} passHref><Button>Images</Button></Link>
+                        
+                        <Link href={onClickGo(null, queryValue, "stockimages")} passHref><Button>StockImages</Button></Link>
+                </Box>
+            );
     }
 }
 
-export default function SearchBar({type, search_query}){
+export default function SearchBar({pre_type, pre_query, pre_options}){
     const router = useRouter();
-
-    const [queryValue, setQueryValue] = useState(search_query);
-    const [queryType, setQueryType] = useState(type);
-
-    const onClickGo = () => {
-        if(queryValue.length > 0){
-            router.push(`/search/${queryType ? (queryType + "/") : ""}${queryValue}`);
-        }
-    }
+    const [queryValue, setQueryValue] = useState({type : pre_type, options : pre_options, query : pre_query});
     
     return (
         <Box sx={{width : "100%"}}>
@@ -140,7 +83,7 @@ export default function SearchBar({type, search_query}){
                         Search on HIVE
                     </Typography>
                     <Typography component="h3" variant="subtitle">
-                        Posts, Accounts, StockImages - all in one place
+                        Posts, Accounts, Images - all in one place
                     </Typography>
                 </Grid>
 
@@ -154,21 +97,21 @@ export default function SearchBar({type, search_query}){
                         <StyledInputBase
                             placeholder="Search…"
                             inputProps={{ 'aria-label': 'search' }}
-                            value={queryValue}
+                            value={queryValue?.query}
                             sx={{width : "100%"}}
-                            onChange={(event) => {setQueryValue(event.target.value);}}     
-                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo();}}}                       
+                            onChange={(event) => {setQueryValue({...queryValue, query : event.target.value });}}     
+                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, pre_type);}}}                       
                         />
                     </Search>                    
 
-                    {getSearchOptions(type, queryValue)}
+                    {getSearchOptions(pre_type, queryValue, setQueryValue)}
                 </Grid>
 
                 <Grid item xs={12} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>
                     {
-                        type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
+                        pre_type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
                     }
-                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={onClickGo}>Go!</Button>
+                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={() => {queryValue.type = null; onClickGo(router, queryValue, pre_type)}}>Go!</Button>
                 </Grid>
             </Grid>
         </Box>

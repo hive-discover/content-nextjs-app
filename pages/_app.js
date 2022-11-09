@@ -1,5 +1,7 @@
 import { useState, useEffect, Fragment } from 'react'
 import { useRouter } from 'next/router'
+import dynamic from 'next/dynamic'
+import { RouterScrollProvider } from '@moxy/next-router-scroll';
 
 import Head from 'next/head'
 import { SessionProvider } from "next-auth/react"
@@ -10,8 +12,8 @@ import { Provider } from 'react-redux'
 
 import {store} from '../redux/store'
 import Layout from '../components/Layout/Layout'
-import DefaultLoader from '../components/Loading/DefaultLoader'
-
+const ApiPing = dynamic(() => import('../components/ApiPing/ApiPing'));
+const DefaultLoader = dynamic(() => import('../components/Loading/DefaultLoader'));
 
 // Fonts
 //  * Roboto
@@ -34,22 +36,34 @@ function MyApp({ Component, pageProps : { session, ...pageProps} }) {
     router.events.on("routeChangeError", (url) => {setLoading(null)});
   }, [router]);
 
+  const loginModalState = useState(false);
+  const [preTitle, setPreTitle] = useState(null);
+
   return (
     <Fragment>
       <Head>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
-        <title>HiveDiscover - Discover more on HIVE</title>
+        <link rel="icon" type="image/png" href="/img/Logo/iconOnly60.png" />
+        {
+          preTitle 
+          ? <title>{preTitle} | HiveDiscover</title>
+          : <title>HiveDiscover - Discover more on HIVE</title>
+        }
       </Head>
     
+      <ApiPing />
+
       <ThemeProvider theme={theme}>
         <CssBaseline />
           <SessionProvider session={session}>
             <Provider store={store}>
-              <Layout>
-                {/* Show loading State  */}
-                {loading ? <DefaultLoader /> : null }
-                <Component {...pageProps} />
-              </Layout>
+              <RouterScrollProvider disableNextLinkScroll={false}>
+                <Layout loginModalState={loginModalState}>
+                  {/* Show loading State  */}
+                  {loading ? <DefaultLoader /> : null }
+                  <Component {...pageProps} loginModalState={loginModalState} setPreTitle={setPreTitle}/>
+                </Layout>
+              </RouterScrollProvider>
             </Provider>
           </SessionProvider>
       </ThemeProvider>

@@ -3,17 +3,14 @@ const nextConfig = {
   reactStrictMode: true,
   eslint : {
     ignoreDuringBuilds: true,
+  },
+  images : {
+    domains : ["images.hive.blog"],
   }
 }
 
-module.exports = nextConfig
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
 
-// const withReactSvg = require('next-react-svg')
-// const path = require('path')
-
-// module.exports = withReactSvg({
-//   include: path.resolve(__dirname, 'public/img/LoadingBlobs/'),
-//   webpack(config, options) {
-//     return config
-//   }
-// })
+module.exports = withBundleAnalyzer(nextConfig)

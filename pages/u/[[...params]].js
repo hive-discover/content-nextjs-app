@@ -1,14 +1,24 @@
 import useSWR from 'swr';
 import {useSession} from 'next-auth/react';
-import { useEffect } from 'react';
-
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'
 import Image from 'next/image'
+import { useRouterScroll } from '@moxy/next-router-scroll';
+import {useEffect, useState} from 'react';
+import Head from "next/head";
 
-import {Container, Grid, Box, Divider, CardActions, Button} from '@mui/material'
+import Container from '@mui/material/Container'
+import Grid from '@mui/material/Grid'
+import Divider from '@mui/material/Divider'
+import Box from '@mui/material/Box'
+import CardActions from '@mui/material/CardActions'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress';
 
+import useAccount from '../../lib/hooks/hive/useAccount';
+import useRelationship from '../../lib/hooks/hive/useRelationship';
 import ProfileRowCard from '../../components/ProfileRowCard/ProfileRowCard'
-import AuthorInteractions from '../../components/AuthorInteractions/AuthorInteractions';
+const AuthorInteractions = dynamic(() => import('../../components/AuthorInteractions/AuthorInteractions'), {ssr: false, loading: () => <CircularProgress sx={{m : 5}}/>});
 
 const AccountNotFound = () => {
     const router = useRouter()
@@ -30,20 +40,37 @@ const AccountNotFound = () => {
 };
 
 
-export default function User(props){
+export default function User({setPreTitle = null}){
     const router = useRouter()
     const [username, selectedTab, ...rest] = router && router.query.params ? router.query.params : [];
 
     const { data: session } = useSession()
-    const {data: account, error: accountError} = useSWR(`/api/getAccount/${username || "unkown"}`, (url)=> fetch(url).then(res => res.json()));
-    const {data : relation, error : relationError} = useSWR(`/api/getRelationship/${session ? session.user.name : "u"}/${username}`, (url)=> fetch(url).then(res => res.json()));
+    const { updateScroll } = useRouterScroll();
+    const {data : account, pending : accountPending, error : accountError} = useAccount({username});
+    const {data : relation, error : relationError} = useRelationship(session?.user?.name ? [session.user.name, username] : null);
 
-    if(accountError || (account && account.error))
+    const profile = (account?.posting_json_metadata && account.posting_json_metadata?.profile) ? account.posting_json_metadata.profile : {};    
+    
+    useEffect(() => {
+        if(profile && !accountPending)
+        {
+            updateScroll();
+            setPreTitle && setPreTitle(profile.name + " (" + username + ")");
+        }
+    }, [profile, accountPending]);
+
+    if(accountError)
         return AccountNotFound();
 
-    const profile = (account && account.posting_json_metadata && account.posting_json_metadata.profile) ? account.posting_json_metadata.profile : {};    
-    
+
     return (
+        <>
+        <Head>
+            {profile?.about && <meta property="description" content={profile.about} />}
+            {account && <meta property="og:title" content={profile?.name || username} />}
+            {profile?.about && <meta property="og:description" content={profile.about} />}
+            {account && <meta property="og:image" content={`https://images.hive.blog/u/${username.replace("@", "") }/avatar/large`} />}
+        </Head>
         <Container>
             {/* Header Stuff */}
             <Grid container 
@@ -52,7 +79,7 @@ export default function User(props){
                 sx={{
                     minHeight : {xs : "30vh", sm : "40vh", md : "50vh"}, 
                     width : "100%", 
-                    background : `url(${"/api/imageProxy?imageUrl=" + profile.cover_image || "/img/blank-cover-image.svg"})`,
+                    background : `url(${profile.cover_image ? "/api/imageProxy?imageUrl=" + profile.cover_image : "/img/blank-cover-image.svg"})`,
                     backgroundSize : "cover",
                     backgroundPosition : "center",
                     backgroundRepeat : "no-repeat",
@@ -67,8 +94,8 @@ export default function User(props){
                     {!session || !username || session.user.name !== username.replace("@", "") 
                         ? ( <Box sx={{ display: 'flex', alignItems: 'center', justifyContent : "center", pl: 1}}>             
                                 <CardActions>
-                                    <Button variant="contained" size="large" color="primary">{relation && relation.follows ? "Unfollow" : "Follow"}</Button>
-                                    <Button variant="contained" size="large" color="primary">{relation && relation.ignores ? "Unmute" : "Mute"}</Button>
+                                    <Button variant="contained" size="large" color="primary">{relation?.follows ? "Unfollow" : "Follow"}</Button>
+                                    <Button variant="contained" size="large" color="primary">{relation?.ignores ? "Unmute" : "Mute"}</Button>
                                 </CardActions>              
                             </Box>
                     ) : null}
@@ -77,9 +104,9 @@ export default function User(props){
                 </Grid>
             </Grid>           
 
-
-            <AuthorInteractions username={username} selectedTab={selectedTab}/>                                                        
-            
-        </Container>
+            <Box sx={{display : "flex", alignItems : "center", justifyContent : "center", width : "100%"}}>
+                <AuthorInteractions username={username} selectedTab={selectedTab} session={session}/>                                                        
+            </Box> 
+        </Container></>
     );
 }

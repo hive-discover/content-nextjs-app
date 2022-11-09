@@ -1,9 +1,12 @@
-import {configureStore} from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit'
 
 import AuthorActivitiesReducer from './slices/AuthorActivitiesSlice';
+import postsSlice from './slices/postsSlice';
 
 export const store = configureStore({
     reducer: {
-        AuthorActivities : AuthorActivitiesReducer
+        AuthorActivities : AuthorActivitiesReducer,
+        hivePosts : postsSlice
     }
 });
+

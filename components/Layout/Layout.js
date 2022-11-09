@@ -1,33 +1,28 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { useState } from 'react';
+import {useState} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSession, signIn, signOut } from "next-auth/react"
-import useSWR from 'swr';
+import { useSession } from "next-auth/react"
 import { useMediaQuery } from '@mui/material';
+import dynamic from 'next/dynamic'
+import Head from 'next/head';
 
 import { styled, alpha, useTheme } from '@mui/material/styles';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
-import Container from '@mui/material/Container'
-import Grid from '@mui/material/Grid'
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import InputBase from '@mui/material/InputBase';
-import Avatar from '@mui/material/Avatar';
-import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItem from '@mui/material/ListItem';
 import List from '@mui/material/List';
 import Drawer from '@mui/material/Drawer'
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Stack from '@mui/material/Stack';
 
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -36,6 +31,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import Person from '@mui/icons-material/Person';
+
+const LoggedInMenue = dynamic(() => import('./LoggedInMenue'), { ssr: false });
+const LoginModal = dynamic(() => import('../LoginModal/LoginModal'));
+const StyledMenu = dynamic(() => import('./StyledMenu'));
+const Footer = dynamic(() => import('./Footer'));
 
 const Search = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -81,46 +81,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-const StyledMenu = styled((props) => (
-  <Menu
-    elevation={0}
-    anchorOrigin={{
-      vertical: 'bottom',
-      horizontal: 'right',
-    }}
-    transformOrigin={{
-      vertical: 'top',
-      horizontal: 'right',
-    }}
-    {...props}
-  />
-))(({ theme }) => ({
-  '& .MuiPaper-root': {
-    borderRadius: 6,
-    marginTop: theme.spacing(1),
-    minWidth: 180,
-    color:
-      theme.palette.mode === 'light' ? 'rgb(55, 65, 81)' : theme.palette.grey[300],
-    boxShadow:
-      'rgb(255, 255, 255) 0px 0px 0px 0px, rgba(0, 0, 0, 0.05) 0px 0px 0px 1px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.05) 0px 4px 6px -2px',
-    '& .MuiMenu-list': {
-      padding: '4px 0',
-    },
-    '& .MuiMenuItem-root': {
-      '& .MuiSvgIcon-root': {
-        fontSize: 18,
-        color: theme.palette.text.secondary,
-        marginRight: theme.spacing(1.5),
-      },
-      '&:active': {
-        backgroundColor: alpha(
-          theme.palette.primary.main,
-          theme.palette.action.selectedOpacity,
-        ),
-      },
-    },
-  },
-}));
+
 
 const pageLinks = [
   {
@@ -129,7 +90,7 @@ const pageLinks = [
     items : [
       {
         title : "Community Feed",
-        href : "/feed/community",
+        href : "/explore/communities",
       },
       "divider",
       // add links to his subscribeed communities
@@ -248,22 +209,31 @@ const onClickGoSearch = (e, router, search_query) => {
 
 const drawerWidth = 350;
 
-export default function Layout({children, ...props}) {
+const getPreloads = (session)=>{
+  if(!session)
+    return null;
+
+  return (<Head>
+    <link rel="preload" href="/explore" as="fetch"></link>
+
+    <link rel="preload" href="/explore/all" as="fetch"></link>
+    <link rel="preload" href="/explore/tags" as="fetch"></link>
+    <link rel="preload" href="/explore/communities" as="fetch"></link>
+
+    <link rel="preload" href="/explore/trending" as="fetch"></link>
+    <link rel="preload" href="/explore/hot" as="fetch"></link>
+    <link rel="preload" href="/explore/new" as="fetch"></link>
+  </Head>);
+}
+
+export default function Layout({children, loginModalState = null, ...props}) {
   const router = useRouter();
   const theme = useTheme();
   const useSideDrawer = useMediaQuery(theme.breakpoints.down('md'));
 
   // Get Session and maybe Account
-  const { data: session } = useSession()
-  const { data : account } = useSWR(`/api/getAccount/${session ? session.user.name : "nothing"}`, (url) => fetch(url).then(r => r.json()));
-
+  const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Profile Menue State
-  const [profileMenueOpen, setProfileMenuOpen] = useState(false);
-  const handleProfileMenueClose = () => {
-    setProfileMenuOpen(false);
-  };
 
   // Mobile SideDrawer State
   const [sideDrawerOpen, setSideDrawerOpen] = useState(false);
@@ -274,8 +244,13 @@ export default function Layout({children, ...props}) {
     [pageLinks[index].menuOpen, pageLinks[index].setMenuOpen] = useState(false);
   });
 
+  // Login Modal Opened
+  const [loginModalOpen, setLoginModalOpen] = (loginModalState || useState(false));
+
   return (
-    <div>
+    <>
+      {getPreloads(session)}
+
       <Box sx={{ flexGrow: 1 }}>
         <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
           <Toolbar>
@@ -324,9 +299,11 @@ export default function Layout({children, ...props}) {
               style={{alignContent: 'center'}}
             >
               {/* Map all pageLinks into this box when it is a big display */}
-              {useSideDrawer ? null : pageLinks.map((value, index) => {
+              {
+                useSideDrawer ? null : (pageLinks.map((value, index) => { 
                   const open = Boolean(value.menuOpen);
-                  return (
+
+                  return (                   
                     <div key={index}>
                       <Button
                         id="demo-customized-button"
@@ -343,8 +320,8 @@ export default function Layout({children, ...props}) {
                       {addPageLinksNotMobile(value.items, value.menuOpen, value.setMenuOpen)}
                     </div>
                   )
-                }
-              )}
+                }))
+              }
             </Box>          
 
             <Search>
@@ -365,55 +342,17 @@ export default function Layout({children, ...props}) {
 
             <Box style={{alignContent: 'center'}}>
               {session
-                ? (
-                  <div>
-                    <Button
-                      id="avatar-dropdown-button"
-                      aria-controls={Boolean(profileMenueOpen) ? 'avatar-dropdown-menu' : undefined}
-                      aria-haspopup="true"
-                      aria-expanded={Boolean(profileMenueOpen) ? 'true' : undefined}
-                      disableElevation
-                      onClick={(event) => { setProfileMenuOpen(event.currentTarget) }}
-                    >
-                      <Avatar 
-                        src={`/api/imageProxy?imageUrl=https://images.hive.blog/u/${session.user.name}/avatar/small`} 
-                        variant="rounded" 
-                      />
-                    </Button>
-                    
-                    <StyledMenu
-                      id="avatar-dropdown-menu"
-                      MenuListProps={{
-                        'aria-labelledby': 'avatar-dropdown-button',
-                      }}
-                      anchorEl={profileMenueOpen}
-                      open={Boolean(profileMenueOpen)}
-                      onClose={handleProfileMenueClose}
-                    >
-                      <Link href={`/u/@${session.user.name}`} passHref>
-                        <MenuItem onClick={handleProfileMenueClose}>           
-                          <Button>Profile</Button>                       
-                        </MenuItem>
-                      </Link>
-                      <Divider />
-                      <MenuItem onClick={handleProfileMenueClose}>
-                          <Button onClick={() => signOut()}>Logout</Button>
-                      </MenuItem>                   
-                    </StyledMenu>
-                  </div>
-                )
+                ? <LoggedInMenue session={session} setLoginModalOpen={setLoginModalOpen} />
               : (
                 <Button
-                  onClick={() => signIn("hivesigner")}
+                  onClick={() => setLoginModalOpen(!loginModalOpen)}
                   endIcon={<Person />}
                   variant="contained"
                   disableElevation
                 >
                   Login
                 </Button>
-              )}
-
-      
+              )}  
             </Box>
           </Toolbar>
         </AppBar>
@@ -442,6 +381,9 @@ export default function Layout({children, ...props}) {
           </Box>
         </Drawer> 
       </Box>
+            
+      {/* Login Modal  */}
+      {loginModalOpen ? <LoginModal isOpen={loginModalOpen} setIsOpen={setLoginModalOpen} /> : null}
 
       {/* Set the children here + Placeholder to not let the content stay behind the Toolbar */}
       <Box sx={{minHeight : "100vh"}}>
@@ -452,75 +394,7 @@ export default function Layout({children, ...props}) {
       <Divider />
 
       {/* Add the Footer */}
-      <footer>
-        <Grid container>     
-          <Grid item xs={6} sm={8}>
-            <Grid container justifyContent="center">
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="About us" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Privacy Policy" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Impressum" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="GitHub" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Server Status" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <ListItem button> 
-                  <Link href="/about" passHref>
-                    <ListItemText primary="Server Status" sx={{textAlign : "center"}}/>
-                  </Link>
-                </ListItem>
-              </Grid>
-            </Grid>
-          </Grid>   
-
-          <Grid item xs={6} sm={4} sx={{display : "flex", textAlign : "center", alignItems : "center"}}>
-            <Divider orientation="vertical" flexItem />
-
-            <Box style={{width : "100%", alignItems : "center"}}>
-              <Image
-                src="/img/Logo/IconOnly.png"
-                alt=""
-                height={50}
-                width={50}
-              />
-              <Typography variant="body2" color="textSecondary" component="h5">
-                <ListItemText primary="Created by @action-chain"/>
-              </Typography>
-              <Typography variant="body2" color="textSecondary" component="h5">
-                <ListItemText primary="2022 - All rights reserved."/>
-              </Typography>
-            </Box>                        
-          </Grid>       
-        </Grid>
-      </footer>
-    </div>
+      <Footer />
+    </>
   );
 }
