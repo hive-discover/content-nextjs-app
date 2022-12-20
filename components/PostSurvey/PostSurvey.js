@@ -7,10 +7,15 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ThumbDownAlt from '@mui/icons-material/ThumbDownAlt';
 import ThumbUpAlt from '@mui/icons-material/ThumbUpAlt';
 
-export default function PostSurvey({onSubmit}){
+export default function PostSurvey({onSubmit, author, permlink}){
 
     const [hasCompleted, setHasCompleted] = useState(false);
     const [expanded, setExpanded] = useState(true);
+
+    useEffect(() => {
+        setHasCompleted(false);
+        setExpanded(true);
+    }, [author, permlink])
 
     if(hasCompleted)
         return null;

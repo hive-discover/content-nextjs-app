@@ -216,6 +216,12 @@ export default function ShowPost({setPreTitle = null}){
         </>;
     }, [post, similarPostsByTag]);
 
+    const postSurvey = useMemo(()=>{
+        if(trackingAuth && !isLoading)
+            return <><br/><PostSurvey onSubmit={setSurveyAnswer} author={author} permlink={permlink} /></>
+        return null;
+    }, [trackingAuth, isLoading, author, permlink]);
+
     return (<>
         <Head>
             {post?.json_metadata?.description && <meta name="description" content={post.json_metadata.description} key="desc" />}
@@ -250,7 +256,7 @@ export default function ShowPost({setPreTitle = null}){
                     {/* Similar by Tag */}
                     {similarByTag}
                     {/* When the user is logged in, we ask to get a survey */}
-                    {trackingAuth && !isLoading && <><br/><PostSurvey onSubmit={setSurveyAnswer} /></>}
+                    {postSurvey}
                     <br/>
                 </Grid>
             </Grid>
