@@ -3,7 +3,6 @@ import {useSession} from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'
 import Image from 'next/image'
-import { useRouterScroll } from '@moxy/next-router-scroll';
 import {useEffect, useState} from 'react';
 import Head from "next/head";
 
@@ -45,7 +44,6 @@ export default function User({setPreTitle = null}){
     const [username, selectedTab, ...rest] = router && router.query.params ? router.query.params : [];
 
     const { data: session } = useSession()
-    const { updateScroll } = useRouterScroll();
     const {data : account, pending : accountPending, error : accountError} = useAccount({username});
     const {data : relation, error : relationError} = useRelationship(session?.user?.name ? [session.user.name, username] : null);
 
@@ -54,7 +52,6 @@ export default function User({setPreTitle = null}){
     useEffect(() => {
         if(profile && !accountPending)
         {
-            updateScroll();
             setPreTitle && setPreTitle(profile.name + " (" + username + ")");
         }
     }, [profile, accountPending]);

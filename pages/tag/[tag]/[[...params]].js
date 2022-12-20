@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useRouter } from "next/router";
 import {useSession} from "next-auth/react";
 import useSWRImmutable from 'swr/immutable'
-import { useRouterScroll } from '@moxy/next-router-scroll';
 
 import { Container, Divider } from "@mui/material";
 import BigPostContainer from "../../../components/BigPostContainer/BigPostContainer";
@@ -40,13 +39,6 @@ export default function CommunityIndex(props){
     const {data : results, error} = useSWRImmutable({tag, session, loading}, getPosts);
     const {posts, title} = results ? results : {};
     const postsLoading = !results && !error;
-
-    // Adjust scrollment
-    const { updateScroll } = useRouterScroll();
-    useEffect(()=>{
-        if(posts && !postsLoading)
-            updateScroll();
-    }, [posts, postsLoading])
 
     return (
         <Container>

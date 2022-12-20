@@ -5,10 +5,15 @@ import dynamic from 'next/dynamic';
 
 import { styled, alpha } from '@mui/material/styles';
 
-import { Box, Button, Divider, CircularProgress, Grid, InputBase, Typography } from "@mui/material";
+import { Box, Button, Divider, CircularProgress, Grid, InputBase, Typography, Stack, Paper } from "@mui/material";
 import SearchIcon from '@mui/icons-material/Search';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
 
-import {onClickGo} from '../../lib/search';
+import {onClickGo, getSearchMeta, createLinkFromSearchMeta, SEARCH_BASES, TIME_RANGES} from '../../lib/search';
+import { useEffect } from 'react';
 
 const PostSearchForm = dynamic(() => import('./PostSearchForm'), {ssr: false, loading: () => <center><CircularProgress sx={{m : 5}}/></center>});
 
@@ -45,36 +50,43 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
         },
 }));
 
-const getSearchOptions = (type, queryValue, setQueryValue) => {
-    switch(type){
-        case "posts":
-            return <PostSearchForm queryValue={queryValue} setQueryValue={setQueryValue} />
-        case "accounts":
-            return null;
-        case "images":
-            return null;
-        case "stockimages":
-            return null;
-        default:
-            return (
-                <Box>
-                    Filter Search Types: 
-                        <Link href={onClickGo(null, queryValue, "posts")} passHref><Button>Posts</Button></Link>
-                        
-                        <Link href={onClickGo(null, queryValue, "accounts")} passHref><Button>Accounts</Button></Link>
-
-                        <Link href={onClickGo(null, queryValue, "images")} passHref><Button>Images</Button></Link>
-                        
-                        <Link href={onClickGo(null, queryValue, "stockimages")} passHref><Button>StockImages</Button></Link>
-                </Box>
-            );
-    }
+const searchOption = (label, values, value, setValue) => {
+    return (
+        <Box sx={{ minWidth: 120 }}>
+            <FormControl fullWidth>
+                <InputLabel id={"search-select-label" + label}>{label}</InputLabel>
+                <Select
+                    labelId={"search-select-label" + label}
+                    id={"search-select-" + label}
+                    value={value}
+                    label={label}
+                    onChange={(event) => setValue(event.target.value)}
+                    >
+                        {
+                        values.map((value) => {
+                            return <MenuItem value={value}>{value}</MenuItem>
+                        })
+                        }
+                </Select>
+            </FormControl>
+        </Box>
+  );
 }
 
-export default function SearchBar({pre_type, pre_query, pre_options}){
+
+export default function SearchBar(){
     const router = useRouter();
-    const [queryValue, setQueryValue] = useState({type : pre_type, options : pre_options, query : pre_query});
     
+    const {base, time_range, query} = getSearchMeta(router?.query?.params)
+
+    const [queryValue, setQueryValue] = useState(query);
+    const [baseValue, setBaseValue] = useState(base);
+    const [timeRangeValue, setTimeRangeValue] = useState(time_range);
+
+    useEffect(() => {
+        setQueryValue(query)
+    }, [router])
+
     return (
         <Box sx={{width : "100%"}}>
             <Grid container>
@@ -83,7 +95,7 @@ export default function SearchBar({pre_type, pre_query, pre_options}){
                         Search on HIVE
                     </Typography>
                     <Typography component="h3" variant="subtitle">
-                        Posts, Accounts, Images - all in one place
+                        Posts & Images - all in one place
                     </Typography>
                 </Grid>
 
@@ -97,21 +109,28 @@ export default function SearchBar({pre_type, pre_query, pre_options}){
                         <StyledInputBase
                             placeholder="Search…"
                             inputProps={{ 'aria-label': 'search' }}
-                            value={queryValue?.query}
+                            value={queryValue}
                             sx={{width : "100%"}}
-                            onChange={(event) => {setQueryValue({...queryValue, query : event.target.value });}}     
-                            onKeyPress={(event) => {if(event.key === "Enter"){onClickGo(router, queryValue, pre_type);}}}                       
+                            onChange={(event) => {setQueryValue(event.target.value);}}     
+                            onKeyPress={(event) => {if(event.key !== "Enter") return; router.push(createLinkFromSearchMeta(base, time_range, queryValue))}}                       
                         />
-                    </Search>                    
-
-                    {getSearchOptions(pre_type, queryValue, setQueryValue)}
+                    </Search>                                       
                 </Grid>
 
-                <Grid item xs={12} sx={{display : "flex", alignItems : "center", justifyContent : "center"}}>
-                    {
-                        pre_type ? (<Link href="/search/" passHref><Button variant="outlined" sx={{mt : 3,width : "40vh"}}>Return</Button></Link>) : null
-                    }
-                    <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}} onClick={() => {queryValue.type = null; onClickGo(router, queryValue, pre_type)}}>Go!</Button>
+                <Grid item xs={12} sx={{pl : {sm : 2, md : 3}, pr : {sm : 2, md : 3}, mt : 5}}>
+                    <Stack
+                        direction="row"
+                        justifyContent="space-evenly"
+                        alignItems="center"
+                        divider={<Divider orientation="vertical" flexItem />}
+                    >
+                        {searchOption("Base", SEARCH_BASES, baseValue, setBaseValue)}
+                        {baseValue !== "stockimages" ? searchOption("Time Range", TIME_RANGES, timeRangeValue, setTimeRangeValue) : null}
+                        
+                        <Link href={createLinkFromSearchMeta(baseValue, timeRangeValue, queryValue)} passHref>
+                            <Button variant="contained" color="primary" sx={{mt : 3, width : "40vh"}}>Go!</Button>
+                        </Link>
+                    </Stack>
                 </Grid>
             </Grid>
         </Box>

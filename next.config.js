@@ -6,7 +6,10 @@ const nextConfig = {
   },
   images : {
     domains : ["images.hive.blog"],
-  }
+  },
+  experimental: {
+    scrollRestoration: true,
+  },
 }
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({

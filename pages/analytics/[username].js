@@ -3,7 +3,6 @@ import useSWRImmutable from 'swr/immutable'
 import {useSession} from 'next-auth/react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router'
-import { useRouterScroll } from '@moxy/next-router-scroll';
 import {useEffect, useState} from 'react';
 
 import North from '@mui/icons-material/North'

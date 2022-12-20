@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic'
 import getDate from '../../../lib/niceTimestamp';
 import Link from 'next/link';
 import {useEffect, useState, useRef, useMemo} from 'react';
-import { useRouterScroll } from '@moxy/next-router-scroll';
 import {useSession} from 'next-auth/react';
 
 import {Box, Container, Divider, Grid, Paper, Skeleton} from '@mui/material';
@@ -21,6 +20,7 @@ const ProfileColumnCard = dynamic(() => import('../../../components/ProfileColum
 const CommunityCard = dynamic(() => import('../../../components/CommunityCard/CommunityCard'));
 const PostsCard = dynamic(() => import('../../../components/PostsCard/PostsCard'));
 const Comments = dynamic(() => import('../../../components/Comments/Comments'));
+const PostSurvey = dynamic(() => import('../../../components/PostSurvey/PostSurvey'));
 
 
 const getTextLoader = () => {
@@ -97,13 +97,12 @@ export default function ShowPost({setPreTitle = null}){
     let {category, author, permlink} = router.query;
     author = (author || "").replace("@", "");
 
-    const { updateScroll } = useRouterScroll();
     const { data: session } = useSession();
     const {data : post, pending : postLoading, error : postError, mutate : postMutate} = useHivePost({author, permlink});
     const { data : community} = useCommunity({name : category, observer : session?.user?.name});
     const {data : similarPostsByAuthor, error : similarPostsByAuthorError} = useSWR({data : {author, permlink, amount : 7}, path : "/search/similar-by-author"}, HiveDiscoverAPI_Fetcher);
     const {data : similarPostsByCommunity, error : similarPostsByCommunityError} = useSWR({data : {author, permlink, amount : 7, parent_permlinks : [category], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
-    const {data : similarPostsByTag, error : similarPostsByTagError} = useSWR({data : {author, permlink, amount : 7, tags : [post && post.json_metadata.tags.length >= 1 ?  post.json_metadata.tags[0] : "placeholder"], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
+    const {data : similarPostsByTag, error : similarPostsByTagError} = useSWR({data : {author, permlink, amount : 7, tags : [post && post.json_metadata?.tags?.length >= 1 ?  post.json_metadata.tags[0] : "placeholder"], minus_days : 7}, path : "/search/similar-post"}, HiveDiscoverAPI_Fetcher);
 
     const publishedInCommunity = community && community.title && !community.error;
     const [isLoading, setLoading] = useState(true);
@@ -118,11 +117,6 @@ export default function ShowPost({setPreTitle = null}){
             .then(()=>setLoading(false));
         }
     }, [post])
-
-    useEffect(()=>{
-        if(!isLoading)
-            updateScroll();
-    }, [isLoading])
 
     // Get Tracking Auth (message signed by user with deviceKey)
     const {data : trackingAuth} = useSWR(session, getDeviceKeyEncodedMessage, {refreshInterval : 60});
@@ -163,6 +157,12 @@ export default function ShowPost({setPreTitle = null}){
         useEffect(()=>{/*nothing */});
     }
 
+    // 4. Post Survey (only once)
+    const [surveyAnswer, setSurveyAnswer] = useState(null);
+    if(surveyAnswer && trackingAuth)
+        useSWRImmutable({data : {...tracking_meta, activity_type : "post_survey", metadata : {...tracking_meta.metadata, survey_answer : surveyAnswer}}, path : "/activities/add"}, HiveDiscoverAPI_POST_AUTH_Fetcher(trackingAuth));
+    else
+        useSWRImmutable(null);
 
     const clickThroughMetadata = {
         origin_author : author,
@@ -244,10 +244,13 @@ export default function ShowPost({setPreTitle = null}){
                 <Grid item sm={12} md={4}>   
                     {/* More by this author */}
                     {authorInfo}
+                    
                     {/* Similar in Community  */}
                     {similarInCategory}
                     {/* Similar by Tag */}
                     {similarByTag}
+                    {/* When the user is logged in, we ask to get a survey */}
+                    {trackingAuth && !isLoading && <><br/><PostSurvey onSubmit={setSurveyAnswer} /></>}
                     <br/>
                 </Grid>
             </Grid>

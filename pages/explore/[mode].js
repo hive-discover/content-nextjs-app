@@ -4,9 +4,8 @@ import dynamic from "next/dynamic";
 import useSWRImmutable from 'swr/immutable'
 import useSWR from 'swr';
 import {useEffect, useState} from "react";
-import { useRouterScroll } from '@moxy/next-router-scroll';
 
-import { Button, Container, Divider, CircularProgress } from "@mui/material";
+import { Box, Button, Container, Divider, CircularProgress, Stack, Typography, Tooltip } from "@mui/material";
 
 import {getDeviceKeyEncodedMessage} from '../../lib/backendAuth';
 import {chooseMode, getLogOnInViewpointFunction} from '../../lib/exploration'
@@ -14,10 +13,44 @@ import {chooseMode, getLogOnInViewpointFunction} from '../../lib/exploration'
 const BigPostContainer = dynamic(() => import("../../components/BigPostContainer/BigPostContainer"), {ssr: false, loading: () => <center><CircularProgress /></center>});
 const LoginModal = dynamic(() => import("../../components/LoginModal/LoginModal"), {ssr: false, loading: () => <center><CircularProgress /></center>});
 
+const getTopBar = (sessionStatus) => {
+
+
+    const isLoggedIn = sessionStatus === "authenticated";
+
+    return <>    
+        <Stack direction="row" sx={{justifyContent : "space-evenly", p : 3, textAlign : "center"}}>
+
+            <Box>
+                <Typography variant="h6">Recommendations</Typography>
+                <Tooltip title={isLoggedIn ? null : "Please login to see recommendation"}>
+                    <Stack direction="row" spacing={1}>
+                        <Button variant="text" href="/explore/all" disabled={!isLoggedIn}>All</Button>
+                        <Button variant="text" href="/explore/communities" disabled={!isLoggedIn}>Communities</Button>
+                        <Button variant="text" href="/explore/tags" disabled={!isLoggedIn}>Tags</Button>
+                    </Stack>
+                </Tooltip>
+            </Box>
+
+            <Divider orientation="vertical" flexItem />
+
+            <Box>
+                <Typography variant="h6">HIVE</Typography>
+                <Stack direction="row" spacing={1}>
+                    <Button variant="text" href="/explore/trending">Trending</Button>
+                    <Button variant="text" href="/explore/hot">Hot</Button>
+                    <Button variant="text" href="/explore/new">New</Button>
+                </Stack>
+            </Box>
+        </Stack>
+
+        <Divider />
+    </>
+}
+
 export default function exploreModeVise(props){
     const router = useRouter();
     const { mode } = router.query;
-    const { updateScroll } = useRouterScroll();
 
     const {data : session, status : sessionStatus} = useSession();
     const {data : msg_encoded} = useSWR(session, getDeviceKeyEncodedMessage, {refreshInterval : 60});
@@ -26,11 +59,6 @@ export default function exploreModeVise(props){
     let {title, dataHook, allowed, logInViewpoint} = chooseMode(mode, session, modeLoading, msg_encoded);
     const {data : hookData, error, isValidating, mutate} = dataHook();
 
-    useEffect(()=>{
-            if(!modeLoading && !(!allowed || error) && hookData?.posts.length > 0)
-                updateScroll();
-        }, [modeLoading, allowed, error, hookData]);
-
     if(modeLoading){
         return <center><CircularProgress /></center>
     }
@@ -38,6 +66,7 @@ export default function exploreModeVise(props){
     allowed = error?.message === "401" ? null : allowed;
     if(!allowed || error){
         return <Container>
+            {getTopBar(sessionStatus)}
             {
                 // Show error
                 error ? <center><h3>Something went wrong</h3><Button variant="contained" onClick={()=>{router.reload(window.location.pathname)}}>Retry</Button></center> : null
@@ -51,8 +80,8 @@ export default function exploreModeVise(props){
 
     const postsAreLoading = !hookData || isValidating;
     return <Container>
+        {getTopBar(sessionStatus)}
         <h1>{title}</h1>
-        <Divider />
 
         <BigPostContainer posts={hookData?.posts} isLoading={postsAreLoading} loadingAmount={25} onInViewpoint={logInViewpoint ? getLogOnInViewpointFunction(session) : null} />
 
