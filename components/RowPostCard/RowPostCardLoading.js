@@ -4,7 +4,7 @@ import {Grid, CardContent, Typography, Skeleton} from '@mui/material'
 export default function RowPostCardLoading(props){
 
     return (
-        <Grid container sx={{width : "100%"}}>
+        <Grid container sx={{width : "100%", height : "250px"}}>
             {/* Thumbnail Image */}
             <Grid item xs={12} sm={2} sx={{alignItems : "center", justifyContent : "center"}}>                
                 <Skeleton width="100%" height="100%" />

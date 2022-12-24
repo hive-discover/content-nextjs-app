@@ -1,76 +1,63 @@
 import useSWRImmutable from 'swr/immutable';
 import {useState, useMemo} from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 
-import { Button, Box, Pagination, Typography } from '@mui/material';
+import { Button, Box, Pagination, Typography, CircularProgress } from '@mui/material';
 
-import {onClickGo, fetchSearch} from '../../lib/search';
+import {onClickGo, fetchSearch, getSearchMeta} from '../../lib/search';
 
 import BigPostContainer from '../../components/BigPostContainer/BigPostContainer';
 
-export default function PostResults({query, options, visiblePostsCount, amountPerPage = 25}){
+const searchFetcher = async (base, time_range, query) => {
+    const body = {query, amount : 100, type : base, time_range, full_data : true};
 
-    const [pageNumber, setPageNumber] = useState(1);
+    const url = base !== "stockimages" ? "https://api.hive-discover.tech/search/posts" : "https://api.hive-discover.tech/images/text";
 
-    const searchBody = {query : query, ...options, amount : visiblePostsCount ? visiblePostsCount : amountPerPage, highlight : true, page_number : pageNumber, type : "posts"};
-    const {data : searchResults, error : searchError} = useSWRImmutable(searchBody, fetchSearch("/search/posts"));
+    const response = await fetch(url, {method : "POST", body : JSON.stringify(body), headers : {'Content-Type' : 'application/json'}});
+    if(!response.ok){
+        const error = new Error("An error occurred while fetching the data.");
+        error.response = response;
+        throw error;
+    }
+
+    const result = await response.json();
+    if(result.status !== "ok"){
+        const error = new Error("An error occurred while fetching the data.");
+        error.response = result;
+        throw error;
+    }
+
+    return result;
+}
+
+export default function PostResults(posts_per_page = 10){
+    const router = useRouter();
+    const {base, time_range, query} = getSearchMeta(router?.query?.params);
+    
+    const {data : searchResults, error : searchError} = useSWRImmutable([base, time_range, query], searchFetcher);
     const isLoading = !searchResults && !searchError;
 
-    const matched_docs = (searchResults && searchResults?.total_matched_docs > 0) ? Math.min(searchResults.total_matched_docs) : -1;
-    const showPagination = matched_docs > amountPerPage && !isLoading && !visiblePostsCount;
-
-    const paginationContainer = useMemo(()=>{
-        if(!showPagination)
-            return null;
-
-        return <Box sx={{display : "flex", justifyContent : "center", p : 5}}>
-                   <Pagination 
-                        count={Math.ceil(matched_docs / amountPerPage)} 
-                        showFirstButton 
-                        variant="outlined" 
-                        shape="rounded" 
-                        size="large"
-                        page={pageNumber}
-                        id="top-post-navigation"
-                        onChange={(event, value)=>{setPageNumber(value);}}
-                    />
-                </Box>;
-    }, [showPagination, matched_docs, amountPerPage, pageNumber]);
-
-    const postsContainer = useMemo(()=>{
-        if(searchError)
-            return <Typography variant="h5" color="error">An error occurred while fetching the data.</Typography>
-
-        if(searchResults || isLoading)
-            return <BigPostContainer posts={searchResults?.posts} isLoading={isLoading} loadingAmount={visiblePostsCount || amountPerPage} />
-
-        return null;
-    }, [searchError, searchResults, isLoading, visiblePostsCount, amountPerPage]);
+    if(searchError)
+        console.error(searchError);
 
     return (
         <Box sx={{width : "100%"}}>
             <br/>
-            <Typography variant="h4">Post - Search Results</Typography>
+            <Typography variant="h4">Search Results</Typography>   
+                     
             {
-                searchResults 
-                ? <Typography variant="subtitle" sx={{mb : 3}}>
-                    Showing {searchResults.posts.length} {matched_docs > 0 ? ` of ${matched_docs} ` : null} posts in {searchResults.time}s
-                  </Typography> 
+                searchResults?.posts?.length > 0
+                ? <BigPostContainer posts={searchResults.posts} fullData={false} />
                 : null
             }
-            
-            {paginationContainer}
-
-            {postsContainer}
-        
-            {paginationContainer}
-
-            <br/>
 
             {
-                matched_docs > (visiblePostsCount || amountPerPage) && !showPagination  
-                ? <center><Link href={onClickGo(null, {query, options, type : "posts"})}><Button variant="contained">View All Results</Button></Link></center> 
-                : null
+                searchError ? <Typography variant="h5" color="error">An error occurred while fetching the data.</Typography> : null
+            }
+
+            {
+                isLoading ? <center><CircularProgress sx={{m : 5}}/></center> : null
             }
         </Box>
     )

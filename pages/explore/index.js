@@ -1,17 +1,19 @@
-import Link from 'next/link'
 import { useSession } from 'next-auth/react';
 import useSWR from 'swr'
+import { useRouter } from 'next/router'
 
 import Container from '@mui/material/Container'
-import Button from '@mui/material/Button'
 
 import {chooseMode} from '../../lib/exploration'
+import { CircularProgress, Divider } from '@mui/material';
+import { useEffect } from 'react';
 
 
 export default function explore(props){
 
     const {data : session, status : sessionStatus} = useSession();
-
+    const router = useRouter();
+ 
     // Prefetch some of the explore page data
     const toPrefetch = ["all", "communities", "tags", "trending", "hot", "new"];
     toPrefetch.forEach(mode => {
@@ -29,77 +31,28 @@ export default function explore(props){
         useSWR(null, () => null); // dummy hook
     })
 
+    useEffect(() => {
+        if(sessionStatus === "loading") return;
+
+        if(sessionStatus === "authenticated") 
+        {
+            // User is logged in
+            router.push("/explore/all");
+            return;
+        }
+
+        // User is not logged in
+        router.push("/explore/trending");
+    }, [sessionStatus])
+
     return (
-        <Container>
+        <Container sx={{height : "80vh"}}>
             <h1>Explore</h1>
+            <Divider />
 
-            <p>
-                LOGIN Show recommendation from anywhere
-                <small>
-                    <Link href="/explore/all">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-                LOGIN Show recommendations community based
-                <small>
-                    <Link href="/explore/communities">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-                LOGIN Show recommendations by tags
-                <small>
-                    <Link href="/explore/tags">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-                Show Trending Posts
-                <small>
-                    <Link href="/explore/trending">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-                Show New Posts
-                <small>
-                    <Link href="/explore/new">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-            <p>
-                Show Hot Posts
-                <small>
-                    <Link href="/explore/hot">
-                        <Button>
-                            View More
-                        </Button>
-                    </Link>
-                </small>
-            </p>
-
-            <p>
-                Custom Feed
-                <small>
-                       Let the user completly create their own feed
-                </small>
-            </p>
+            <center>
+                <CircularProgress />
+            </center>
         </Container>
     )
 }

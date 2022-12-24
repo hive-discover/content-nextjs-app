@@ -102,23 +102,7 @@ const pageLinks = [
   },
   {
     title : "Search",
-    menuOpen : null, setMenuOpen : null, // Menu-State
-    items : [
-      {
-        title : "Posts",
-        href : "/search/posts",
-      },
-      "divider",
-      {
-        title: 'Accounts',
-        href: '/search/accounts',
-      },
-      "divider",
-      {
-        title: 'Stock Images',
-        href: '/search/stockimages',
-      }
-    ]
+    href : "/search",
   },
   {
     title : "Explore",
